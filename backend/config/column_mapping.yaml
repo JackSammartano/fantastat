@@ -1,0 +1,213 @@
+{
+  "mapping_schema_version": 1,
+  "provider": "fantacalcio",
+  "applies_to": [
+    "2022/2023",
+    "2023/2024",
+    "2024/2025",
+    "2025/2026"
+  ],
+  "columns": [
+    {
+      "source": "Id",
+      "canonical": "external_player_id",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "identity",
+      "aggregation": "not_applicable",
+      "zero_policy": "valid",
+      "semantic_status": "verified_from_data",
+      "description": "Identificativo esterno stabile del calciatore nel dataset."
+    },
+    {
+      "source": "R",
+      "canonical": "classic_role",
+      "data_type": "string",
+      "nullable": false,
+      "category": "role",
+      "aggregation": "not_applicable",
+      "zero_policy": "not_applicable",
+      "semantic_status": "verified_official",
+      "description": "Ruolo Classic storico della stagione."
+    },
+    {
+      "source": "Rm",
+      "canonical": "mantra_roles",
+      "data_type": "string",
+      "nullable": false,
+      "category": "role",
+      "aggregation": "not_applicable",
+      "zero_policy": "not_applicable",
+      "semantic_status": "verified_official",
+      "description": "Ruolo o ruoli Mantra storici, separati da punto e virgola."
+    },
+    {
+      "source": "Nome",
+      "canonical": "source_player_name",
+      "data_type": "string",
+      "nullable": false,
+      "category": "identity",
+      "aggregation": "not_applicable",
+      "zero_policy": "not_applicable",
+      "semantic_status": "verified_from_data",
+      "description": "Nome visualizzato esattamente come pubblicato dalla sorgente."
+    },
+    {
+      "source": "Squadra",
+      "canonical": "source_team_name",
+      "data_type": "string",
+      "nullable": false,
+      "category": "team",
+      "aggregation": "not_applicable",
+      "zero_policy": "not_applicable",
+      "semantic_status": "user_confirmed",
+      "description": "Semplice valore squadra della sorgente, senza ulteriori inferenze temporali."
+    },
+    {
+      "source": "Pv",
+      "canonical": "rated_appearances",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Partite o presenze a voto."
+    },
+    {
+      "source": "Mv",
+      "canonical": "average_rating",
+      "data_type": "number",
+      "nullable": true,
+      "category": "statistic",
+      "aggregation": "weighted_mean",
+      "weight_column": "Pv",
+      "zero_policy": "null_when_pv_zero",
+      "semantic_status": "verified_official",
+      "description": "Media voto; il valore sorgente zero diventa null analitico quando Pv è zero."
+    },
+    {
+      "source": "Fm",
+      "canonical": "fantasy_average",
+      "data_type": "number",
+      "nullable": true,
+      "category": "statistic",
+      "aggregation": "weighted_mean",
+      "weight_column": "Pv",
+      "zero_policy": "null_when_pv_zero",
+      "semantic_status": "verified_official",
+      "description": "Media Fantavoto o fantamedia; zero diventa null analitico quando Pv è zero."
+    },
+    {
+      "source": "Gf",
+      "canonical": "goals_scored",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Gol segnati."
+    },
+    {
+      "source": "Gs",
+      "canonical": "goals_conceded",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Gol subiti."
+    },
+    {
+      "source": "Rp",
+      "canonical": "penalties_saved",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Rigori parati."
+    },
+    {
+      "source": "Rc",
+      "canonical": "penalties_taken",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official_and_data_relation",
+      "description": "Rigori calciati o tirati; nei dati è sempre uguale a R+ più R-."
+    },
+    {
+      "source": "R+",
+      "canonical": "penalties_scored",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official_and_data_relation",
+      "description": "Rigori segnati."
+    },
+    {
+      "source": "R-",
+      "canonical": "penalties_missed",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_from_data_relation",
+      "description": "Rigori non segnati; nei dati è la differenza tra Rc e R+."
+    },
+    {
+      "source": "Ass",
+      "canonical": "assists",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Assist."
+    },
+    {
+      "source": "Amm",
+      "canonical": "yellow_cards",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Ammonizioni."
+    },
+    {
+      "source": "Esp",
+      "canonical": "red_cards",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Espulsioni."
+    },
+    {
+      "source": "Au",
+      "canonical": "own_goals",
+      "data_type": "integer",
+      "nullable": false,
+      "category": "statistic",
+      "aggregation": "sum_if_disjoint",
+      "zero_policy": "valid",
+      "semantic_status": "verified_official",
+      "description": "Autoreti o autogol."
+    }
+  ]
+}
+

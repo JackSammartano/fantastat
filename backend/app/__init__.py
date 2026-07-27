@@ -1,0 +1,2 @@
+"""Applicazione backend Fantacalcio Analysis."""
+

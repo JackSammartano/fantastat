@@ -1,0 +1,2 @@
+"""Test automatici del backend."""
+

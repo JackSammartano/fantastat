@@ -1,0 +1,10 @@
+{
+  "validation_schema_version": 1,
+  "max_rated_appearances": 38,
+  "average_rating_min": 0,
+  "average_rating_max": 10,
+  "warn_additive_with_zero_appearances": true,
+  "warn_goals_greater_than_appearances": true,
+  "warn_assists_greater_than_appearances": true
+}
+

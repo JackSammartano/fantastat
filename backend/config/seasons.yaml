@@ -1,0 +1,33 @@
+{
+  "source_root": "../..",
+  "canonical_sheet": "Tutti",
+  "header_row": 2,
+  "role_sheets": {
+    "Portieri": "P",
+    "Difensori": "D",
+    "Centrocampisti": "C",
+    "Attaccanti": "A"
+  },
+  "expected_columns": [
+    "Id", "R", "Rm", "Nome", "Squadra", "Pv", "Mv", "Fm", "Gf",
+    "Gs", "Rp", "Rc", "R+", "R-", "Ass", "Amm", "Esp", "Au"
+  ],
+  "seasons": [
+    {
+      "code": "2022/2023",
+      "file": "Statistiche_Fantacalcio_Stagione_2022_23.xlsx"
+    },
+    {
+      "code": "2023/2024",
+      "file": "Statistiche_Fantacalcio_Stagione_2023_24.xlsx"
+    },
+    {
+      "code": "2024/2025",
+      "file": "Statistiche_Fantacalcio_Stagione_2024_25.xlsx"
+    },
+    {
+      "code": "2025/2026",
+      "file": "Statistiche_Fantacalcio_Stagione_2025_26.xlsx"
+    }
+  ]
+}

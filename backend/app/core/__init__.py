@@ -1,0 +1,2 @@
+"""Configurazione e componenti trasversali."""
+

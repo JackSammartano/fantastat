@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=75,<76"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fantacalcio-analysis"
+version = "0.1.0"
+description = "Pipeline locale per l'analisi storica del Fantacalcio Serie A"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic>=1.16,<2",
+    "fastapi>=0.116,<1",
+    "openpyxl>=3.1,<4",
+    "pandas>=2.3,<3",
+    "SQLAlchemy>=2.0,<3",
+    "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28,<1",
+    "pytest>=8.4,<9",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["backend/tests"]
+
+[tool.setuptools.packages.find]
+include = ["backend*"]

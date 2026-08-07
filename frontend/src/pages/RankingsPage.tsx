@@ -103,6 +103,7 @@ export function RankingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [presetKey, setPresetKey] = useState("p-equilibrato");
+  const [configurationOpen, setConfigurationOpen] = useState(!restored);
 
   useEffect(() => {
     Promise.all([api.seasons(), api.rankingMetadata(), api.rankingConfigs()])
@@ -157,9 +158,8 @@ export function RankingsPage() {
     setLoading(true);
     setError(null);
     try {
-      setResult(
-        await api.calculateRanking(currentConfiguration())
-      );
+      setResult(await api.calculateRanking(currentConfiguration()));
+      setConfigurationOpen(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Errore API");
     } finally {
@@ -199,7 +199,18 @@ export function RankingsPage() {
         </div>
       </header>
 
-      <section className="ranking-config">
+      <section className={`ranking-config${configurationOpen ? "" : " ranking-config--collapsed"}`}>
+        <button
+          className="ranking-config__toggle"
+          type="button"
+          aria-expanded={configurationOpen}
+          aria-controls="ranking-configuration-content"
+          onClick={() => setConfigurationOpen((open) => !open)}
+        >
+          <span><strong>Configurazione classifica</strong><small>{role} · {activeWeightCount} metriche attive · {selectedSeasons.length} stagioni</small></span>
+          <span aria-hidden="true">{configurationOpen ? "▲" : "▼"}</span>
+        </button>
+        {configurationOpen && <div id="ranking-configuration-content">
         <div className="preset-panel">
           <div><span className="eyebrow">Configurazioni di esempio</span><h2>Un punto di partenza per ogni ruolo</h2><p>{RANKING_PRESETS.find((item) => item.key === presetKey)?.description}</p></div>
           <label className="field"><span>Preset</span><select value={presetKey} onChange={(event) => loadPreset(event.target.value)}>{RANKING_PRESETS.map((preset) => <option key={preset.key} value={preset.key}>{preset.name} · {preset.role}</option>)}</select></label>
@@ -391,6 +402,7 @@ export function RankingsPage() {
         <small className="config-note">
           {activeWeightCount} metriche attive · nessun preset applicato
         </small>
+        </div>}
       </section>
 
       {error && <StatePanel title="Calcolo non riuscito" message={error} tone="error" />}

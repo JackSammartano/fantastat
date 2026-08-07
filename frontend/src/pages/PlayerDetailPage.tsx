@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import type { CurrentListFilters } from "../api/client";
 import { ReliabilityBadge } from "../components/ReliabilityBadge";
 import { StatePanel } from "../components/StatePanel";
 import type { PlayerDetail } from "../models/api";
@@ -31,6 +32,7 @@ export function PlayerDetailPage() {
   const navigationState = location.state as {
     from?: string;
     rankingState?: unknown;
+    listState?: { filters: CurrentListFilters; search: string; team: string };
   } | null;
   const [player, setPlayer] = useState<PlayerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +93,7 @@ export function PlayerDetailPage() {
         state={
           navigationState?.from === "rankings"
             ? { restoreRanking: navigationState.rankingState }
-            : undefined
+            : { restoreList: navigationState?.listState }
         }
       >
         ← Torna {navigationState?.from === "rankings" ? "alle classifiche" : "al listone"}

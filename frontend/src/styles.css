@@ -194,6 +194,15 @@ tbody tr:hover { background: #f6f6f0; }
   padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #d8ded6;
   border-radius: 16px; background: #fbfaf6;
 }
+.ranking-config--collapsed { padding: .7rem 1rem; }
+.ranking-config__toggle {
+  display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 0 0 .9rem; border: 0; color: #234c3a; background: transparent;
+  text-align: left; cursor: pointer;
+}
+.ranking-config--collapsed .ranking-config__toggle { padding-bottom: 0; }
+.ranking-config__toggle > span:first-child { display: flex; flex-direction: column; gap: .2rem; }
+.ranking-config__toggle small { color: #74827a; font-weight: 500; }
 .saved-configs { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: .8rem; padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #dfe4dd; }
 .saved-config-list { display: flex; flex-wrap: wrap; gap: .4rem; margin: -.35rem 0 1rem; }
 .saved-config-list span { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .5rem; border-radius: 999px; color: #315b48; background: #e1ece4; font-size: .76rem; }

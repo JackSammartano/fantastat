@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { api, type CurrentListFilters } from "../api/client";
 import { StatePanel } from "../components/StatePanel";
 import type { CurrentListPage as CurrentListData, Role } from "../models/api";
@@ -7,9 +7,15 @@ import type { CurrentListPage as CurrentListData, Role } from "../models/api";
 const number = (value: number | null) => value?.toLocaleString("it-IT") ?? "—";
 
 export function CurrentListPage() {
-  const [filters, setFilters] = useState<CurrentListFilters>({ page: 1, pageSize: 25, sortBy: "quotation", sortOrder: "desc" });
-  const [search, setSearch] = useState("");
-  const [team, setTeam] = useState("");
+  const location = useLocation();
+  const restored = (location.state as {
+    restoreList?: { filters: CurrentListFilters; search: string; team: string };
+  } | null)?.restoreList;
+  const [filters, setFilters] = useState<CurrentListFilters>(
+    restored?.filters ?? { page: 1, pageSize: 25, sortBy: "quotation", sortOrder: "desc" }
+  );
+  const [search, setSearch] = useState(restored?.search ?? "");
+  const [team, setTeam] = useState(restored?.team ?? "");
   const [data, setData] = useState<CurrentListData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +46,7 @@ export function CurrentListPage() {
     {error ? <StatePanel title="Errore di caricamento" message={error} tone="error" /> : !data ? <StatePanel title="Caricamento" message="Lettura del listone…" /> : data.items.length === 0 ? <StatePanel title="Nessun risultato" message="Modifica i filtri applicati." /> : <section className="table-panel">
       <div className="table-summary"><strong>{data.total_items.toLocaleString("it-IT")} calciatori</strong><span>Pagina {data.page} di {data.total_pages}</span></div>
       <div className="table-scroll"><table><thead><tr><th>Giocatore</th><th>Squadra</th><th>Mantra</th><th>Qt. C</th><th>Qt. M</th><th>FVM</th><th>FVM M</th><th>Storico</th></tr></thead><tbody>{data.items.map((item) => <tr key={item.id}>
-        <td><Link className="player-link" to={`/players/${item.player_id}`} state={{ from: "current-list" }}><span className={`role-chip role-chip--${item.classic_role}`}>{item.classic_role}</span><strong>{item.name}</strong></Link></td>
+        <td><Link className="player-link" to={`/players/${item.player_id}`} state={{ from: "current-list", listState: { filters, search, team } }}><span className={`role-chip role-chip--${item.classic_role}`}>{item.classic_role}</span><strong>{item.name}</strong></Link></td>
         <td>{item.team}</td><td>{item.mantra_roles.join(" · ")}</td><td>{number(item.quotation)}</td><td>{number(item.mantra_quotation)}</td><td>{number(item.fvm)}</td><td>{number(item.fvm_mantra)}</td><td>{item.historical_seasons ? `${item.historical_seasons}/4` : <span className="status-pill status-pill--new">Nuovo</span>}</td>
       </tr>)}</tbody></table></div>
       <div className="pagination"><button className="button button--ghost" disabled={data.page <= 1} onClick={() => setFilters((current) => ({ ...current, page: (current.page ?? 1) - 1 }))}>Precedente</button><span>{data.page}</span><button className="button button--ghost" disabled={data.page >= data.total_pages} onClick={() => setFilters((current) => ({ ...current, page: (current.page ?? 1) + 1 }))}>Successiva</button></div>

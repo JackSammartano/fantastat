@@ -11,7 +11,7 @@ import type {
   Role,
   Season
 } from "../models/api";
-import { formatNumber } from "../utils/format";
+import { formatNumber, trendDirection } from "../utils/format";
 
 const METRIC_LABELS: Record<string, string> = {
   fantasy_average_recency_weighted: "Fantamedia recente ponderata",
@@ -438,15 +438,15 @@ export function RankingsPage() {
                     <td>{item.total_pv ?? "—"}</td>
                     <td>
                       {item.fantasy_average_trend_slope === null ? "—" : (
-                        <div className={`ranking-trend ${item.fantasy_average_trend_slope > 0 ? "ranking-trend--up" : item.fantasy_average_trend_slope < 0 ? "ranking-trend--down" : ""}`}>
+                        <div className={`ranking-trend ${trendDirection(item.fantasy_average_trend_slope) === 1 ? "ranking-trend--up" : trendDirection(item.fantasy_average_trend_slope) === -1 ? "ranking-trend--down" : ""}`}>
                           <strong>
-                            {item.fantasy_average_trend_slope > 0 ? "↑" : item.fantasy_average_trend_slope < 0 ? "↓" : "→"}{" "}
+                            {trendDirection(item.fantasy_average_trend_slope) === 1 ? "↑" : trendDirection(item.fantasy_average_trend_slope) === -1 ? "↓" : "→"}{" "}
                             {item.metrics.fantasy_average_trend_slope
                               ? `${formatNumber(item.metrics.fantasy_average_trend_slope.percentile, 0)}° pct`
                               : "trend"}
                           </strong>
                           <small>
-                            pendenza {item.fantasy_average_trend_slope > 0 ? "+" : ""}{formatNumber(item.fantasy_average_trend_slope, 2)}
+                            pendenza {trendDirection(item.fantasy_average_trend_slope) === 1 ? "+" : ""}{formatNumber(item.fantasy_average_trend_slope, 2)}
                             {item.fantasy_average_absolute_change === null ? "" : ` · ultima ${item.fantasy_average_absolute_change > 0 ? "+" : ""}${formatNumber(item.fantasy_average_absolute_change, 2)}`}
                           </small>
                           <small>{item.seasons_with_pv ?? 0} stagioni · {item.total_pv ?? 0} Pv</small>

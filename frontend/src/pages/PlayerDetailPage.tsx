@@ -16,12 +16,12 @@ import { api } from "../api/client";
 import { ReliabilityBadge } from "../components/ReliabilityBadge";
 import { StatePanel } from "../components/StatePanel";
 import type { PlayerDetail } from "../models/api";
-import { formatNumber, formatPercent } from "../utils/format";
+import { formatNumber, formatPercent, trendDirection } from "../utils/format";
 
 function trendLabel(value: number | null): string {
   if (value === null) return "Storico insufficiente";
-  if (value > 0) return "In crescita";
-  if (value < 0) return "In calo";
+  if (trendDirection(value) === 1) return "In crescita";
+  if (trendDirection(value) === -1) return "In calo";
   return "Stabile";
 }
 
@@ -170,9 +170,9 @@ export function PlayerDetailPage() {
             className={
               metrics.fantasy_average_trend_slope === null
                 ? ""
-                : metrics.fantasy_average_trend_slope > 0
+                : trendDirection(metrics.fantasy_average_trend_slope) === 1
                   ? "positive"
-                  : metrics.fantasy_average_trend_slope < 0
+                  : trendDirection(metrics.fantasy_average_trend_slope) === -1
                     ? "negative"
                     : ""
             }
@@ -182,7 +182,7 @@ export function PlayerDetailPage() {
           <p>
             {metrics.fantasy_average_trend_slope === null
               ? "Servono almeno due stagioni con partite a voto."
-              : `${metrics.fantasy_average_trend_slope > 0 ? "+" : ""}${formatNumber(metrics.fantasy_average_trend_slope, 2)} punti medi per stagione.`}
+              : `${trendDirection(metrics.fantasy_average_trend_slope) === 1 ? "+" : ""}${formatNumber(metrics.fantasy_average_trend_slope, 2)} punti medi per stagione.`}
           </p>
         </article>
         <article className="trend-card">
@@ -194,9 +194,9 @@ export function PlayerDetailPage() {
             className={
               metrics.average_rating_trend_slope === null
                 ? ""
-                : metrics.average_rating_trend_slope > 0
+                : trendDirection(metrics.average_rating_trend_slope) === 1
                   ? "positive"
-                  : metrics.average_rating_trend_slope < 0
+                  : trendDirection(metrics.average_rating_trend_slope) === -1
                     ? "negative"
                     : ""
             }
@@ -206,7 +206,7 @@ export function PlayerDetailPage() {
           <p>
             {metrics.average_rating_trend_slope === null
               ? "Servono almeno due stagioni con partite a voto."
-              : `${metrics.average_rating_trend_slope > 0 ? "+" : ""}${formatNumber(metrics.average_rating_trend_slope, 2)} punti medi per stagione.`}
+              : `${trendDirection(metrics.average_rating_trend_slope) === 1 ? "+" : ""}${formatNumber(metrics.average_rating_trend_slope, 2)} punti medi per stagione.`}
           </p>
         </article>
         <aside className="trend-note">

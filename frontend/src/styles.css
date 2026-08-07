@@ -245,16 +245,6 @@ tbody tr:hover { background: #f6f6f0; }
 .merge-success span { font-size: .8rem; }
 
 @media (max-width: 1050px) {
-  .stat-grid, .metric-grid { grid-template-columns: repeat(2, 1fr); }
-  .filters { grid-template-columns: repeat(2, 1fr); }
-  .filters .button { align-self: stretch; }
-  .search-results { grid-template-columns: repeat(2, 1fr); }
-  .ranking-controls, .weight-grid { grid-template-columns: repeat(2, 1fr); }
-  .saved-configs { grid-template-columns: 1fr 1fr; }
-  .trend-grid { grid-template-columns: 1fr 1fr; }
-  .trend-note { grid-column: 1 / -1; }
-}
-@media (max-width: 760px) {
   body { padding-bottom: 0; }
   .app-shell { display: block; }
   .sidebar {
@@ -272,6 +262,16 @@ tbody tr:hover { background: #f6f6f0; }
   .brand__mark { flex: 0 0 42px; }
   .brand__text { display: none; }
   .sidebar--open .brand__text { display: flex; }
+  .stat-grid, .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .filters { grid-template-columns: repeat(2, 1fr); }
+  .filters .button { align-self: stretch; }
+  .search-results { grid-template-columns: repeat(2, 1fr); }
+  .ranking-controls, .weight-grid { grid-template-columns: repeat(2, 1fr); }
+  .saved-configs { grid-template-columns: 1fr 1fr; }
+  .trend-grid { grid-template-columns: 1fr 1fr; }
+  .trend-note { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
   .page { padding: 1rem .75rem 1.5rem; }
   h1 { font-size: clamp(1.9rem, 10vw, 2.7rem); }
   .page-header, .player-hero { align-items: flex-start; flex-direction: column; }

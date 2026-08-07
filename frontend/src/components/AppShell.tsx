@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { IS_STATIC } from "../api/client";
 
@@ -10,17 +11,26 @@ const navItems = [
 ];
 
 export function AppShell() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
+      <aside className={`sidebar${isMobileMenuOpen ? " sidebar--open" : ""}`}>
+        <button
+          type="button"
+          className="brand"
+          aria-label={isMobileMenuOpen ? "Chiudi menu" : "Apri menu"}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="main-navigation"
+          onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
+        >
           <span className="brand__mark">FL</span>
-          <div>
+          <span className="brand__text">
             <strong>FantaLab</strong>
             <span>Asta 26/27</span>
-          </div>
-        </div>
-        <nav aria-label="Navigazione principale">
+          </span>
+        </button>
+        <nav id="main-navigation" aria-label="Navigazione principale">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -29,6 +39,7 @@ export function AppShell() {
               className={({ isActive }) =>
                 `nav-link${isActive ? " nav-link--active" : ""}`
               }
+              onClick={() => setIsMobileMenuOpen(false)}
             >
               {item.label}
             </NavLink>

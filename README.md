@@ -56,6 +56,37 @@ Controllare o arrestare:
 I servizi ascoltano esclusivamente su `127.0.0.1`. PID e log sono salvati in
 `reports/runtime/`, esclusa da Git.
 
+## Consultazione da mobile e condivisione
+
+L'interfaccia include navigazione mobile inferiore, filtri a colonna, tabelle
+scorrevoli con prima colonna fissa e layout adattivi per schede, grafici,
+ranking e revisioni.
+
+Per condividere il progetto viene avviata una seconda istanza protetta da
+password e in sola lettura:
+
+```powershell
+.\scripts\start-share.ps1 -Password "una-password-robusta"
+```
+
+Questa istanza serve la build frontend e le API sulla porta locale `8080`.
+Consente il calcolo dei ranking, ma blocca salvataggi, mapping e fusioni. Per
+renderla raggiungibile da Internet usare un tunnel HTTPS e arrestarlo quando
+non serve. Arresto dell'istanza:
+
+```powershell
+.\scripts\stop-share.ps1
+```
+
+La modalità consigliata per la condivisione da PC aziendale è lo snapshot
+pubblico GitHub Pages. Non richiede tunnel né PC acceso:
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.scripts.export_static_site
+```
+
+Dettagli e procedura: `docs/github-pages.md`.
+
 ## Funzioni disponibili
 
 - dashboard e riepilogo qualità;
@@ -113,8 +144,16 @@ Un database alternativo può essere configurato con
 
 ## Listone 2026/2027
 
-La struttura database è pronta, ma l'importazione definitiva verrà
-implementata soltanto dopo l'ispezione read-only del file ufficiale.
+Il listone ufficiale viene validato e importato in modo transazionale e
+idempotente:
+
+```powershell
+.\.venv\Scripts\alembic.exe upgrade head
+.\.venv\Scripts\python.exe -m backend.scripts.import_current_list
+```
+
+`Tutti` è la sorgente canonica; i fogli per ruolo sono controlli di coerenza.
+Il foglio `Ceduti` è contato nel report ma non entra nel listone corrente.
 
 ## Documentazione
 

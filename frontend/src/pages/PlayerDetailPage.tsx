@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ReliabilityBadge } from "../components/ReliabilityBadge";
 import { StatePanel } from "../components/StatePanel";
@@ -27,6 +27,11 @@ function trendLabel(value: number | null): string {
 
 export function PlayerDetailPage() {
   const { playerId } = useParams();
+  const location = useLocation();
+  const navigationState = location.state as {
+    from?: string;
+    rankingState?: unknown;
+  } | null;
   const [player, setPlayer] = useState<PlayerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,8 +81,20 @@ export function PlayerDetailPage() {
   const trend = metrics.fantasy_average_percentage_change;
   return (
     <div className="page">
-      <Link className="back-link" to="/players">
-        ← Torna ai giocatori
+      <Link
+        className="back-link"
+        to={
+          navigationState?.from === "rankings"
+            ? "/rankings"
+            : "/current-list"
+        }
+        state={
+          navigationState?.from === "rankings"
+            ? { restoreRanking: navigationState.rankingState }
+            : undefined
+        }
+      >
+        ← Torna {navigationState?.from === "rankings" ? "alle classifiche" : "al listone"}
       </Link>
       <header className="player-hero">
         <div>
@@ -98,6 +115,22 @@ export function PlayerDetailPage() {
           score={metrics.reliability_score}
         />
       </header>
+
+      {player.current_list && (
+        <section className="panel current-player-panel">
+          <div className="panel__header">
+            <div><span className="eyebrow">Listone ufficiale 2026/2027</span><h2>{player.current_list.team} · {player.current_list.role}</h2></div>
+            <Link to="/current-list">Apri listone</Link>
+          </div>
+          <div className="current-player-values">
+            <div><span>Ruoli Mantra</span><strong>{player.current_list.mantra_roles.join(" · ")}</strong></div>
+            <div><span>Quotazione Classic</span><strong>{formatNumber(player.current_list.quotation, 0)}</strong><small>iniziale {formatNumber(player.current_list.initial_quotation, 0)}</small></div>
+            <div><span>Quotazione Mantra</span><strong>{formatNumber(player.current_list.mantra_quotation, 0)}</strong><small>iniziale {formatNumber(player.current_list.initial_mantra_quotation, 0)}</small></div>
+            <div><span>FVM Classic</span><strong>{formatNumber(player.current_list.fvm, 0)}</strong></div>
+            <div><span>FVM Mantra</span><strong>{formatNumber(player.current_list.fvm_mantra, 0)}</strong></div>
+          </div>
+        </section>
+      )}
 
       <section className="metric-grid">
         <article className="metric-card">

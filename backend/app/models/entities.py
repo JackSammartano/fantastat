@@ -398,6 +398,11 @@ class CurrentSeasonList(Base):
     official_mantra_roles: Mapped[str | None] = mapped_column(String(100))
     official_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"))
     quotation: Mapped[float | None] = mapped_column(Float)
+    initial_quotation: Mapped[float | None] = mapped_column(Float)
+    mantra_quotation: Mapped[float | None] = mapped_column(Float)
+    initial_mantra_quotation: Mapped[float | None] = mapped_column(Float)
+    fvm: Mapped[float | None] = mapped_column(Float)
+    fvm_mantra: Mapped[float | None] = mapped_column(Float)
     imported_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )

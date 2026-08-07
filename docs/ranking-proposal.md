@@ -4,8 +4,11 @@
 
 ## Principi
 
-- Il ruolo è obbligatorio e il confronto avviene soltanto nel relativo gruppo.
+- Il ruolo è obbligatorio e il confronto avviene soltanto tra i calciatori del
+  listone corrente che hanno quel ruolo ufficiale 2026/2027.
 - L'utente sceglie stagioni, minimo di presenze e pesi.
+- La stagione corrente senza statistiche non entra nelle metriche, nella
+  copertura o nell'affidabilità: il rendimento usa soltanto lo storico.
 - Le metriche storiche utilizzano le formule già approvate.
 - Affidabilità e rendimento restano separati. L'affidabilità entra nel
   punteggio soltanto se l'utente le assegna esplicitamente un peso.
@@ -24,7 +27,13 @@
 - `continuity` — maggiore è meglio;
 - `fantasy_average_volatility` — minore è meglio;
 - `latest_fantasy_average` — maggiore è meglio;
+- `fantasy_average_trend_slope` — maggiore è meglio; pendenza della regressione
+  storica ponderata per presenze;
 - `reliability_score` — maggiore è meglio, opzionale.
+
+La tabella mostra inoltre pendenza, variazione fra le ultime due stagioni,
+percentile del trend nel ruolo, stagioni valide e presenze. Il trend resta una
+descrizione dello storico e non viene presentato come previsione.
 
 ## Normalizzazione proposta
 
@@ -97,3 +106,10 @@ affidabilità e numero di presenze
 3. Approvare l'elenco iniziale delle metriche e la loro direzione.
 4. Decidere se fornire preset iniziali per ruolo oppure partire sempre con pesi
    impostati manualmente.
+
+## Preset didattici dell'interfaccia
+
+L'interfaccia fornisce quattro configurazioni modificabili, una per ruolo:
+portiere equilibrato, difensore da bonus, centrocampista offensivo e attaccante
+da bonus. Servono a rendere comprensibile il meccanismo dei pesi e non sono
+presentate come valutazioni oggettive o previsioni.

@@ -6,6 +6,7 @@ import { StatePanel } from "../components/StatePanel";
 import type {
   DataQualityIssue,
   PendingMapping,
+  CurrentListPage,
   PlayerPage,
   Season
 } from "../models/api";
@@ -17,6 +18,7 @@ interface DashboardData {
   leaders: PlayerPage;
   issues: DataQualityIssue[];
   mappings: PendingMapping[];
+  currentList: CurrentListPage;
 }
 
 export function DashboardPage() {
@@ -36,9 +38,10 @@ export function DashboardPage() {
       }),
       api.issues(),
       api.pendingMappings()
+      ,api.currentList({ pageSize: 1 })
     ])
-      .then(([seasons, players, leaders, issues, mappings]) => {
-        if (active) setData({ seasons, players, leaders, issues, mappings });
+      .then(([seasons, players, leaders, issues, mappings, currentList]) => {
+        if (active) setData({ seasons, players, leaders, issues, mappings, currentList });
       })
       .catch((reason: unknown) => {
         if (active) {
@@ -80,16 +83,21 @@ export function DashboardPage() {
           <span className="eyebrow">Storico Serie A</span>
           <h1>La tua asta, con memoria.</h1>
           <p>
-            Quattro stagioni normalizzate, confrontabili e sempre accompagnate
-            dalla qualità del campione.
+            Il listone ufficiale 2026/27 collegato a quattro stagioni storiche,
+            con qualità del campione sempre visibile.
           </p>
         </div>
-        <Link className="button button--primary" to="/players">
-          Esplora giocatori
+        <Link className="button button--primary" to="/current-list">
+          Apri il listone
         </Link>
       </header>
 
       <section className="stat-grid" aria-label="Riepilogo">
+        <article className="stat-card">
+          <span>Listone 2026/27</span>
+          <strong>{data.currentList.total_items.toLocaleString("it-IT")}</strong>
+          <small>calciatori ufficiali attivi</small>
+        </article>
         <article className="stat-card">
           <span>Giocatori</span>
           <strong>{data.players.total_items.toLocaleString("it-IT")}</strong>
@@ -97,8 +105,8 @@ export function DashboardPage() {
         </article>
         <article className="stat-card">
           <span>Stagioni</span>
-          <strong>{data.seasons.length}</strong>
-          <small>{data.seasons.map((season) => season.code).join(" · ")}</small>
+          <strong>{data.seasons.filter((season) => !season.is_current).length}</strong>
+          <small>stagioni storiche normalizzate</small>
         </article>
         <article className="stat-card">
           <span>Mapping da rivedere</span>
@@ -169,4 +177,3 @@ export function DashboardPage() {
     </div>
   );
 }
-

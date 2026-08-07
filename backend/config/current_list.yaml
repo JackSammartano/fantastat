@@ -1,0 +1,18 @@
+{
+  "season_code": "2026/2027",
+  "source_file": "Quotazioni_Fantacalcio_Stagione_2026_27.xlsx",
+  "source_provider": "fantacalcio",
+  "canonical_sheet": "Tutti",
+  "ceded_sheet": "Ceduti",
+  "header_row": 2,
+  "role_sheets": {
+    "Portieri": "P",
+    "Difensori": "D",
+    "Centrocampisti": "C",
+    "Attaccanti": "A"
+  },
+  "expected_columns": [
+    "Id", "R", "RM", "Nome", "Squadra", "Qt.A", "Qt.I", "Diff.",
+    "Qt.A M", "Qt.I M", "Diff.M", "FVM", "FVM M"
+  ]
+}

@@ -15,6 +15,18 @@ Documentazione interattiva:
 
 ## Endpoint implementati
 
+### Listone corrente
+
+`GET /api/v1/current-list` espone lo snapshot ufficiale 2026/2027 con
+paginazione, ricerca, filtri per ruolo, squadra, stato identità e intervallo di
+quotazione. Supporta ordinamento per nome, squadra, quotazioni e FVM Classic o
+Mantra. Ogni riga include `player_id` per aprire lo storico del calciatore e il
+numero di stagioni storiche disponibili.
+
+`GET /api/v1/players/{id}` include anche `current_list`, con squadra, ruoli,
+quotazioni e FVM ufficiali. Il valore è `null` per un'identità non presente nel
+listone corrente.
+
 ```text
 GET  /health
 GET  /api/v1/seasons

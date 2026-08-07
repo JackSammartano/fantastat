@@ -25,9 +25,21 @@
 
 ## Stato corrente
 
-**Ultimo aggiornamento:** 27 luglio 2026  
-**Fase corrente:** applicazione locale avviabile e in esecuzione per prova;
-fase 14 in attesa del listone ufficiale  
+**Ultimo aggiornamento:** 7 agosto 2026
+**Fase corrente:** applicazione completa per consultazione locale; listone,
+dettaglio e ranking allineati alla stagione 2026/2027
+
+**Interfaccia asta:** il listone è la vista principale; la vecchia pagina
+giocatori reindirizza al listone. Le schede mantengono il contesto di ritorno e
+la pagina classifiche include un preset didattico modificabile per ogni ruolo.
+
+**Mobile e condivisione:** layout responsive completo con navigazione inferiore
+su smartphone. Predisposta istanza separata sulla porta 8080, autenticata e in
+sola lettura; il calcolo ranking resta permesso perché non modifica il database.
+
+**GitHub Pages:** predisposto snapshot pubblico statico dei soli 493 calciatori
+attuali. Filtri, schede, confronti e ranking funzionano nel browser; dati raw,
+database e operazioni amministrative restano esclusi. Deploy tramite Actions.
 **Ambiente corrente:** PC aziendale, Windows, Codex CLI  
 **Prossimo ambiente:** PC di casa — vedi *Migrazione al PC di casa*  
 **Codice applicativo creato:** pipeline, database, API e frontend locale  
@@ -111,8 +123,8 @@ Alla prossima sessione, sul PC di casa:
 9. esaminare la revisione pendente senza confermare fusioni automatiche;
 10. verificare l'export `data/processed/player-metrics.csv`;
 11. non applicare fusioni reali senza verifica umana dei singoli calciatori;
-12. attendere e ispezionare il listone ufficiale 2026/2027;
-13. integrare i trigger d'importazione API soltanto nella fase dedicata.
+12. esporre il listone corrente tramite API e frontend nella prossima fase;
+13. integrare i trigger d'importazione API soltanto se richiesto.
 
 ---
 
@@ -870,19 +882,23 @@ comunque un dato di audit e va trattata come tale.
 
 ## Fase 14 — Listone ufficiale 2026/2027
 
-**Stato:** in attesa del file.
+**Stato:** completata e verificata il 7 agosto 2026.
 
-- [ ] Ricevere il listone.
-- [ ] Analizzarlo in sola lettura prima di implementare l'import.
-- [ ] Rilevare fogli, intestazioni, tipi e ID.
-- [ ] Proporre mapping specifico.
-- [ ] Ricevere approvazione.
-- [ ] Importare ruolo ufficiale separatamente dallo storico.
-- [ ] Importare squadra ufficiale separatamente dallo storico.
-- [ ] Importare quotazione e altri campi disponibili.
-- [ ] Collegare giocatori tramite ID o revisione.
-- [ ] Gestire trasferimenti successivi.
-- [ ] Testare idempotenza.
+- [x] Ricevere il listone.
+- [x] Analizzarlo in sola lettura prima di implementare l'import.
+- [x] Rilevare fogli, intestazioni, tipi e ID.
+- [x] Definire e documentare il mapping specifico.
+- [x] Importare ruolo ufficiale separatamente dallo storico.
+- [x] Importare squadra ufficiale separatamente dallo storico.
+- [x] Importare quotazioni Classic/Mantra e FVM.
+- [x] Collegare tramite ID, senza fusioni fuzzy automatiche.
+- [x] Predisporre la sostituzione transazionale per aggiornamenti successivi.
+- [x] Testare idempotenza.
+
+**Risultato:** 493 calciatori attivi; 427 collegati tramite ID storico; 66
+nuovi; 5 ceduti esclusi dallo snapshot corrente. Seconda esecuzione: zero
+righe importate (`already_imported`). Backup pre-import salvato in
+`database/backups/fantacalcio-pre-listone-20260807.db`.
 
 ### Bug/miglioramenti
 

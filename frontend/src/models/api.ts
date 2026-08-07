@@ -30,6 +30,34 @@ export interface PlayerPage {
   total_pages: number;
 }
 
+export interface CurrentListItem {
+  id: number;
+  player_id: number;
+  external_player_id: string | null;
+  name: string;
+  classic_role: Role;
+  mantra_roles: string[];
+  team: string;
+  quotation: number | null;
+  initial_quotation: number | null;
+  quotation_change: number | null;
+  mantra_quotation: number | null;
+  initial_mantra_quotation: number | null;
+  mantra_quotation_change: number | null;
+  fvm: number | null;
+  fvm_mantra: number | null;
+  mapping_status: string;
+  historical_seasons: number;
+}
+
+export interface CurrentListPage {
+  items: CurrentListItem[];
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+}
+
 export interface PlayerHistory {
   season_id: number;
   season: string;
@@ -98,6 +126,18 @@ export interface PlayerDetail {
   aliases: string[];
   history: PlayerHistory[];
   metrics: PlayerMetrics;
+  current_list: {
+    role: Role;
+    mantra_roles: string[];
+    team: string;
+    quotation: number | null;
+    initial_quotation: number | null;
+    mantra_quotation: number | null;
+    initial_mantra_quotation: number | null;
+    fvm: number | null;
+    fvm_mantra: number | null;
+    mapping_status: string;
+  } | null;
 }
 
 export interface CompareResponse {
@@ -146,6 +186,9 @@ export interface RankingResponse {
     score: number;
     reliability_score: number | null;
     total_pv: number | null;
+    seasons_with_pv: number | null;
+    fantasy_average_trend_slope: number | null;
+    fantasy_average_absolute_change: number | null;
     metrics: Record<string, RankingMetricComponent>;
   }>;
 }

@@ -19,6 +19,7 @@ from backend.app.models import (
 )
 from backend.app.schemas.api import (
     CompareResponse,
+    CurrentListPage,
     DataQualityIssueResponse,
     PendingMappingResponse,
     PlayerDetailResponse,
@@ -34,6 +35,7 @@ from backend.app.schemas.api import (
     RankingConfigCreate,
     RankingConfigResponse,
 )
+from backend.app.services.current_list_queries import list_current_players
 from backend.app.services.player_merges import (
     apply_merge,
     merge_preview,
@@ -209,6 +211,42 @@ def get_players(
         team=team,
         min_appearances=min_appearances,
         min_seasons=min_seasons,
+        page=page,
+        page_size=page_size,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+
+@router.get("/current-list", response_model=CurrentListPage)
+def get_current_list(
+    session: DatabaseSession,
+    search: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
+    role: Annotated[Literal["P", "D", "C", "A"] | None, Query()] = None,
+    team: Annotated[str | None, Query(min_length=1, max_length=150)] = None,
+    mapping_status: Annotated[
+        Literal["certain_external_id", "new_player"] | None, Query()
+    ] = None,
+    min_quotation: Annotated[float | None, Query(ge=0)] = None,
+    max_quotation: Annotated[float | None, Query(ge=0)] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 25,
+    sort_by: Annotated[
+        Literal["name", "team", "quotation", "mantra_quotation", "fvm", "fvm_mantra"],
+        Query(),
+    ] = "quotation",
+    sort_order: Annotated[Literal["asc", "desc"], Query()] = "desc",
+) -> dict:
+    if min_quotation is not None and max_quotation is not None and min_quotation > max_quotation:
+        raise HTTPException(422, "La quotazione minima non può superare la massima")
+    return list_current_players(
+        session,
+        search=search,
+        role=role,
+        team=team,
+        mapping_status=mapping_status,
+        min_quotation=min_quotation,
+        max_quotation=max_quotation,
         page=page,
         page_size=page_size,
         sort_by=sort_by,

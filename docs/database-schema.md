@@ -23,7 +23,7 @@
 | `player_season_stats` | storico aggregato | giocatore + stagione univoci |
 | `player_team_seasons` | squadre osservate | associazione univoca |
 | `player_mapping_reviews` | revisioni identità | stato e similarità controllati |
-| `current_season_list` | listone 2026/2027 | stagione + record sorgente univoci |
+| `current_season_list` | listone 2026/2027, ruoli, squadra, quotazioni Classic/Mantra e FVM | stagione + record sorgente univoci |
 | `ranking_configs` | ranking personalizzati | nome configurazione univoco |
 
 ## Integrità delle statistiche
@@ -53,4 +53,3 @@ backend/migrations/versions/
 
 Il database generato non viene versionato; vengono versionati i modelli e le
 migrazioni necessarie a ricrearlo.
-

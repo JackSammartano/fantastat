@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import base64
+import os
+import secrets
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from backend.app.api.v1 import router as api_v1_router
 
@@ -25,6 +30,44 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(api_v1_router)
+
+    @app.middleware("http")
+    async def shared_access_guard(request: Request, call_next) -> Response:
+        password = os.getenv("FANTACALCIO_SHARE_PASSWORD")
+        if password:
+            authorization = request.headers.get("Authorization", "")
+            authenticated = False
+            if authorization.startswith("Basic "):
+                try:
+                    decoded = base64.b64decode(authorization[6:]).decode("utf-8")
+                    username, supplied = decoded.split(":", 1)
+                    authenticated = username == "fantacalcio" and secrets.compare_digest(
+                        supplied, password
+                    )
+                except (ValueError, UnicodeDecodeError):
+                    authenticated = False
+            if not authenticated:
+                return Response(
+                    status_code=401,
+                    headers={"WWW-Authenticate": 'Basic realm="FantaLab"'},
+                )
+        if os.getenv("FANTACALCIO_READ_ONLY") == "1" and request.method not in {
+            "GET",
+            "HEAD",
+            "OPTIONS",
+        }:
+            if not (
+                request.method == "POST"
+                and request.url.path == "/api/v1/rankings/calculate"
+            ):
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "error": "read_only",
+                        "detail": "Condivisione in sola consultazione",
+                    },
+                )
+        return await call_next(request)
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -66,8 +109,23 @@ def create_app() -> FastAPI:
             },
         )
 
+    frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def frontend(full_path: str) -> FileResponse:
+        requested = (frontend_dist / full_path).resolve()
+        if (
+            full_path
+            and requested.is_relative_to(frontend_dist.resolve())
+            and requested.is_file()
+        ):
+            return FileResponse(requested)
+        index = frontend_dist / "index.html"
+        if index.is_file():
+            return FileResponse(index)
+        raise HTTPException(404, "Frontend non compilato")
+
     return app
 
 
 app = create_app()
-

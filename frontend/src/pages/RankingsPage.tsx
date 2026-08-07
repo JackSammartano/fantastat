@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { ReliabilityBadge } from "../components/ReliabilityBadge";
 import { StatePanel } from "../components/StatePanel";
@@ -25,10 +25,70 @@ const METRIC_LABELS: Record<string, string> = {
   continuity: "Continuità",
   fantasy_average_volatility: "Volatilità fantamedia",
   latest_fantasy_average: "Fantamedia ultima stagione",
+  fantasy_average_trend_slope: "Trend fantamedia",
   reliability_score: "Affidabilità del campione"
 };
 
+interface RankingPreset {
+  key: string;
+  role: Role;
+  name: string;
+  description: string;
+  minimumAppearances: number;
+  weights: Record<string, number>;
+}
+
+interface RankingViewState {
+  role: Role;
+  selectedSeasons: string[];
+  minimumAppearances: number;
+  decay: number;
+  continuityThreshold: number;
+  weights: Record<string, number>;
+  result: RankingResponse | null;
+  presetKey: string;
+}
+
+const RANKING_PRESETS: RankingPreset[] = [
+  {
+    key: "p-equilibrato",
+    role: "P",
+    name: "Portiere equilibrato",
+    description: "Premia rendimento, pochi gol subiti, continuità e solidità del campione.",
+    minimumAppearances: 10,
+    weights: { average_rating_recency_weighted: 2, goals_conceded_per_appearance: 3, penalties_saved_per_appearance: 1, continuity: 2, fantasy_average_volatility: 1, fantasy_average_trend_slope: 1, reliability_score: 1 }
+  },
+  {
+    key: "d-bonus",
+    role: "D",
+    name: "Difensore da bonus",
+    description: "Bilancia fantamedia, qualità del voto, bonus e presenza costante.",
+    minimumAppearances: 10,
+    weights: { fantasy_average_recency_weighted: 3, average_rating_recency_weighted: 2, goals_per_appearance: 1.5, assists_per_appearance: 1.5, continuity: 1, fantasy_average_trend_slope: 1.5, reliability_score: 1 }
+  },
+  {
+    key: "c-offensivo",
+    role: "C",
+    name: "Centrocampista offensivo",
+    description: "Dà priorità a fantamedia, gol e assist senza ignorare continuità e affidabilità.",
+    minimumAppearances: 10,
+    weights: { fantasy_average_recency_weighted: 3, goals_per_appearance: 2, assists_per_appearance: 2, bonus_events_per_appearance: 1, continuity: 1, fantasy_average_trend_slope: 1.5, reliability_score: 1 }
+  },
+  {
+    key: "a-bonus",
+    role: "A",
+    name: "Attaccante da bonus",
+    description: "Privilegia fantamedia, gol e produzione di bonus sul pool degli attaccanti attuali.",
+    minimumAppearances: 8,
+    weights: { fantasy_average_recency_weighted: 3, goals_per_appearance: 3, assists_per_appearance: 1, bonus_events_per_appearance: 2, continuity: 0.5, fantasy_average_trend_slope: 1, reliability_score: 0.5 }
+  }
+];
+
 export function RankingsPage() {
+  const location = useLocation();
+  const restored = (
+    location.state as { restoreRanking?: RankingViewState } | null
+  )?.restoreRanking;
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [metadata, setMetadata] = useState<RankingMetadata | null>(null);
   const [role, setRole] = useState<Role>("P");
@@ -42,23 +102,37 @@ export function RankingsPage() {
   const [configName, setConfigName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [presetKey, setPresetKey] = useState("p-equilibrato");
 
   useEffect(() => {
     Promise.all([api.seasons(), api.rankingMetadata(), api.rankingConfigs()])
       .then(([seasonRows, metricRows, savedConfigs]) => {
         setSeasons(seasonRows);
-        setSelectedSeasons(seasonRows.map((season) => season.code));
         setMetadata(metricRows);
-        setWeights(
-          Object.fromEntries(metricRows.metrics.map((metric) => [metric.key, 0]))
-        );
+        if (restored) {
+          setRole(restored.role);
+          setSelectedSeasons(restored.selectedSeasons);
+          setMinimumAppearances(restored.minimumAppearances);
+          setDecay(restored.decay);
+          setContinuityThreshold(restored.continuityThreshold);
+          setWeights(restored.weights);
+          setResult(restored.result);
+          setPresetKey(restored.presetKey);
+        } else {
+          setSelectedSeasons(
+            seasonRows.filter((season) => !season.is_current).map((season) => season.code)
+          );
+          const preset = RANKING_PRESETS[0];
+          setWeights(Object.fromEntries(metricRows.metrics.map((metric) => [metric.key, preset.weights[metric.key] ?? 0])));
+          setMinimumAppearances(preset.minimumAppearances);
+        }
         setConfigs(savedConfigs);
       })
       .catch((reason: unknown) =>
         setError(reason instanceof Error ? reason.message : "Errore API")
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [restored]);
 
   const currentConfiguration = (): RankingRequest => ({
     role,
@@ -68,6 +142,16 @@ export function RankingsPage() {
     continuity_threshold: continuityThreshold,
     metric_weights: weights
   });
+
+  const loadPreset = (key: string) => {
+    const preset = RANKING_PRESETS.find((item) => item.key === key);
+    if (!preset || !metadata) return;
+    setPresetKey(key);
+    setRole(preset.role);
+    setMinimumAppearances(preset.minimumAppearances);
+    setWeights(Object.fromEntries(metadata.metrics.map((metric) => [metric.key, preset.weights[metric.key] ?? 0])));
+    setResult(null);
+  };
 
   const calculate = async () => {
     setLoading(true);
@@ -109,12 +193,17 @@ export function RankingsPage() {
           <h1>Classifiche personalizzate</h1>
           <p>
             Scegli tu i pesi. Ogni contributo è espresso come percentile nel
-            gruppo filtrato e resta ispezionabile.
+            gruppo filtrato e resta ispezionabile. Parti da uno degli esempi e
+            poi modifica liberamente i pesi.
           </p>
         </div>
       </header>
 
       <section className="ranking-config">
+        <div className="preset-panel">
+          <div><span className="eyebrow">Configurazioni di esempio</span><h2>Un punto di partenza per ogni ruolo</h2><p>{RANKING_PRESETS.find((item) => item.key === presetKey)?.description}</p></div>
+          <label className="field"><span>Preset</span><select value={presetKey} onChange={(event) => loadPreset(event.target.value)}>{RANKING_PRESETS.map((preset) => <option key={preset.key} value={preset.key}>{preset.name} · {preset.role}</option>)}</select></label>
+        </div>
         <div className="saved-configs">
           <label className="field">
             <span>Configurazioni salvate</span>
@@ -205,6 +294,11 @@ export function RankingsPage() {
               onChange={(event) => {
                 const nextRole = event.target.value as Role;
                 setRole(nextRole);
+                const rolePreset = RANKING_PRESETS.find((item) => item.role === nextRole);
+                if (rolePreset) {
+                  loadPreset(rolePreset.key);
+                  return;
+                }
                 setWeights((current) =>
                   Object.fromEntries(
                     Object.entries(current).map(([key, value]) => {
@@ -242,7 +336,7 @@ export function RankingsPage() {
 
         <fieldset className="season-selector">
           <legend>Stagioni considerate</legend>
-          {seasons.map((season) => (
+          {seasons.filter((season) => !season.is_current).map((season) => (
             <label key={season.id}>
               <input
                 type="checkbox"
@@ -318,6 +412,7 @@ export function RankingsPage() {
                   <th>Giocatore</th>
                   <th>Punteggio</th>
                   <th>Presenze</th>
+                  <th>Trend recente</th>
                   <th>Affidabilità</th>
                   <th>Composizione</th>
                 </tr>
@@ -326,9 +421,38 @@ export function RankingsPage() {
                 {result.items.map((item) => (
                   <tr key={item.player_id}>
                     <td>{item.position}</td>
-                    <td><Link className="player-link" to={`/players/${item.player_id}`}><strong>{item.display_name}</strong></Link></td>
+                    <td><Link className="player-link" to={`/players/${item.player_id}`} state={{
+                      from: "rankings",
+                      rankingState: {
+                        role,
+                        selectedSeasons,
+                        minimumAppearances,
+                        decay,
+                        continuityThreshold,
+                        weights,
+                        result,
+                        presetKey
+                      } satisfies RankingViewState
+                    }}><strong>{item.display_name}</strong></Link></td>
                     <td><strong>{formatNumber(item.score, 1)}</strong></td>
                     <td>{item.total_pv ?? "—"}</td>
+                    <td>
+                      {item.fantasy_average_trend_slope === null ? "—" : (
+                        <div className={`ranking-trend ${item.fantasy_average_trend_slope > 0 ? "ranking-trend--up" : item.fantasy_average_trend_slope < 0 ? "ranking-trend--down" : ""}`}>
+                          <strong>
+                            {item.fantasy_average_trend_slope > 0 ? "↑" : item.fantasy_average_trend_slope < 0 ? "↓" : "→"}{" "}
+                            {item.metrics.fantasy_average_trend_slope
+                              ? `${formatNumber(item.metrics.fantasy_average_trend_slope.percentile, 0)}° pct`
+                              : "trend"}
+                          </strong>
+                          <small>
+                            pendenza {item.fantasy_average_trend_slope > 0 ? "+" : ""}{formatNumber(item.fantasy_average_trend_slope, 2)}
+                            {item.fantasy_average_absolute_change === null ? "" : ` · ultima ${item.fantasy_average_absolute_change > 0 ? "+" : ""}${formatNumber(item.fantasy_average_absolute_change, 2)}`}
+                          </small>
+                          <small>{item.seasons_with_pv ?? 0} stagioni · {item.total_pv ?? 0} Pv</small>
+                        </div>
+                      )}
+                    </td>
                     <td>
                       {item.reliability_score === null ? "—" : (
                         <ReliabilityBadge

@@ -1,6 +1,7 @@
 import type {
   DataQualityIssue,
   CompareResponse,
+  CurrentListPage,
   MappingResolution,
   MergeAudit,
   MergePreview,
@@ -14,10 +15,13 @@ import type {
   Role,
   Season
 } from "../models/api";
+import { staticApi } from "./staticData";
+
+export const IS_STATIC = import.meta.env.VITE_STATIC_MODE === "true";
 
 const API_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") ??
-  "http://127.0.0.1:8000";
+  "";
 
 export class ApiError extends Error {
   constructor(
@@ -58,7 +62,37 @@ export interface PlayerFilters {
   sortOrder?: "asc" | "desc";
 }
 
+export interface CurrentListFilters {
+  search?: string;
+  role?: Role | "";
+  team?: string;
+  mappingStatus?: "certain_external_id" | "new_player" | "";
+  minQuotation?: number;
+  maxQuotation?: number;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export function getCurrentList(filters: CurrentListFilters = {}) {
+  if (IS_STATIC) return staticApi.currentList(filters);
+  const params = new URLSearchParams();
+  if (filters.search) params.set("search", filters.search);
+  if (filters.role) params.set("role", filters.role);
+  if (filters.team) params.set("team", filters.team);
+  if (filters.mappingStatus) params.set("mapping_status", filters.mappingStatus);
+  if (filters.minQuotation !== undefined) params.set("min_quotation", String(filters.minQuotation));
+  if (filters.maxQuotation !== undefined) params.set("max_quotation", String(filters.maxQuotation));
+  params.set("page", String(filters.page ?? 1));
+  params.set("page_size", String(filters.pageSize ?? 25));
+  params.set("sort_by", filters.sortBy ?? "quotation");
+  params.set("sort_order", filters.sortOrder ?? "desc");
+  return request<CurrentListPage>(`/api/v1/current-list?${params}`);
+}
+
 export function getPlayers(filters: PlayerFilters = {}): Promise<PlayerPage> {
+  if (IS_STATIC) return staticApi.players(filters);
   const params = new URLSearchParams();
   if (filters.search) params.set("search", filters.search);
   if (filters.role) params.set("role", filters.role);
@@ -77,33 +111,35 @@ export function getPlayers(filters: PlayerFilters = {}): Promise<PlayerPage> {
 }
 
 export const api = {
-  seasons: () => request<Season[]>("/api/v1/seasons"),
+  seasons: () => IS_STATIC ? staticApi.seasons() : request<Season[]>("/api/v1/seasons"),
   players: getPlayers,
-  player: (id: number) => request<PlayerDetail>(`/api/v1/players/${id}`),
+  currentList: getCurrentList,
+  player: (id: number) => IS_STATIC ? staticApi.player(id) as Promise<PlayerDetail> : request<PlayerDetail>(`/api/v1/players/${id}`),
   comparePlayers: (ids: number[]) => {
+    if (IS_STATIC) return staticApi.comparePlayers(ids);
     const params = new URLSearchParams();
     ids.forEach((id) => params.append("ids", String(id)));
     return request<CompareResponse>(`/api/v1/players/compare?${params}`);
   },
-  rankingMetadata: () =>
+  rankingMetadata: () => IS_STATIC ? staticApi.rankingMetadata() :
     request<RankingMetadata>("/api/v1/rankings"),
   calculateRanking: (payload: RankingRequest) =>
-    request<RankingResponse>("/api/v1/rankings/calculate", {
+    IS_STATIC ? staticApi.calculateRanking(payload) : request<RankingResponse>("/api/v1/rankings/calculate", {
       method: "POST",
       body: JSON.stringify(payload)
     }),
-  rankingConfigs: () =>
+  rankingConfigs: () => IS_STATIC ? staticApi.rankingConfigs() :
     request<RankingConfig[]>("/api/v1/ranking-configs"),
   saveRankingConfig: (name: string, configuration: RankingRequest) =>
-    request<RankingConfig>("/api/v1/ranking-configs", {
+    IS_STATIC ? staticApi.saveRankingConfig(name, configuration) : request<RankingConfig>("/api/v1/ranking-configs", {
       method: "POST",
       body: JSON.stringify({ name, configuration })
     }),
   deleteRankingConfig: (id: number) =>
-    request<void>(`/api/v1/ranking-configs/${id}`, { method: "DELETE" }),
-  issues: () => request<DataQualityIssue[]>("/api/v1/data-quality/issues"),
+    IS_STATIC ? staticApi.deleteRankingConfig(id) : request<void>(`/api/v1/ranking-configs/${id}`, { method: "DELETE" }),
+  issues: () => IS_STATIC ? Promise.resolve([] as DataQualityIssue[]) : request<DataQualityIssue[]>("/api/v1/data-quality/issues"),
   pendingMappings: () =>
-    request<PendingMapping[]>("/api/v1/player-mappings/pending"),
+    IS_STATIC ? Promise.resolve([] as PendingMapping[]) : request<PendingMapping[]>("/api/v1/player-mappings/pending"),
   resolveMapping: (id: number, payload: MappingResolution) =>
     request<{
       id: number;

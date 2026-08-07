@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api, getPlayers } from "./client";
+import { api, getCurrentList, getPlayers } from "./client";
 
 describe("getPlayers", () => {
   afterEach(() => vi.restoreAllMocks());
@@ -46,6 +46,24 @@ describe("getPlayers", () => {
 
     const url = String(fetchMock.mock.calls[0]?.[0]);
     expect(url).toContain("ids=12&ids=34");
+  });
+
+  it("serializza filtri e ordinamento del listone corrente", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ items: [], page: 1, page_size: 25, total_items: 0, total_pages: 0 }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      })
+    );
+
+    await getCurrentList({ role: "A", team: "Roma", mappingStatus: "new_player", minQuotation: 5, sortBy: "fvm", sortOrder: "desc" });
+
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("role=A");
+    expect(url).toContain("team=Roma");
+    expect(url).toContain("mapping_status=new_player");
+    expect(url).toContain("min_quotation=5");
+    expect(url).toContain("sort_by=fvm");
   });
 
   it("invia la configurazione ranking senza aggiungere pesi impliciti", async () => {

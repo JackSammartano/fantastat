@@ -19,6 +19,7 @@ METRIC_DIRECTIONS: dict[str, str] = {
     "continuity": "higher",
     "fantasy_average_volatility": "lower",
     "latest_fantasy_average": "higher",
+    "fantasy_average_trend_slope": "higher",
     "reliability_score": "higher",
 }
 METRIC_ROLES: dict[str, tuple[str, ...]] = {
@@ -127,6 +128,13 @@ def calculate_ranking(
                 "metrics": components,
                 "reliability_score": candidate.metrics.get("reliability_score"),
                 "total_pv": candidate.metrics.get("total_pv"),
+                "seasons_with_pv": candidate.metrics.get("seasons_with_pv"),
+                "fantasy_average_trend_slope": candidate.metrics.get(
+                    "fantasy_average_trend_slope"
+                ),
+                "fantasy_average_absolute_change": candidate.metrics.get(
+                    "fantasy_average_absolute_change"
+                ),
             }
         )
     rows.sort(key=lambda row: (-row["score"], row["display_name"], row["player_id"]))

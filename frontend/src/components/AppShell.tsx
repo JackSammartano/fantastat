@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { IS_STATIC } from "../api/client";
 
 const navItems = [
   { to: "/", label: "Dashboard", end: true },
-  { to: "/players", label: "Giocatori" },
+  { to: "/current-list", label: "Listone 26/27" },
   { to: "/compare", label: "Confronto" },
   { to: "/rankings", label: "Classifiche" },
-  { to: "/mappings", label: "Revisioni" }
+  ...(!IS_STATIC ? [{ to: "/mappings", label: "Revisioni" }] : [])
 ];
 
 export function AppShell() {

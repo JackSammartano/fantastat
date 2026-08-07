@@ -11,6 +11,7 @@ from backend.app.db.base import Base
 from backend.app.db.session import create_database_engine, get_session
 from backend.app.main import create_app
 from backend.app.models import (
+    CurrentSeasonList,
     Player,
     PlayerMappingReview,
     PlayerSeasonStats,
@@ -138,6 +139,74 @@ def api(tmp_path: Path) -> tuple[TestClient, sessionmaker[Session]]:
                 reason="Similarità test",
             )
         )
+        current_season = Season(
+            code="2026/2027", start_year=2026, end_year=2027, is_current=True
+        )
+        session.add(current_season)
+        session.flush()
+        current_import = SourceImport(
+            season_id=current_season.id,
+            import_type="current_list",
+            source_filename="listone.xlsx",
+            source_sha256="c" * 64,
+            source_provider="fantacalcio",
+            status="completed",
+            row_count=2,
+        )
+        session.add(current_import)
+        session.flush()
+        current_sources = []
+        for row_number, external_id in enumerate(("1", "2"), start=3):
+            current_source = SourceRecord(
+                import_id=current_import.id,
+                sheet_name="Tutti",
+                source_row_number=row_number,
+                external_player_id=external_id,
+                raw_payload_json={"Id": external_id},
+                record_hash=("d" if external_id == "1" else "e") * 64,
+                validation_status="valid",
+            )
+            session.add(current_source)
+            current_sources.append(current_source)
+        session.flush()
+        session.add_all(
+            [
+                CurrentSeasonList(
+                    season_id=current_season.id,
+                    player_id=first.id,
+                    source_record_id=current_sources[0].id,
+                    external_player_id="1",
+                    source_name="Primo",
+                    official_classic_role="C",
+                    official_mantra_roles="C;T",
+                    official_team_id=inter.id,
+                    quotation=20,
+                    initial_quotation=20,
+                    mantra_quotation=21,
+                    initial_mantra_quotation=21,
+                    fvm=200,
+                    fvm_mantra=210,
+                    mapping_status="certain_external_id",
+                ),
+                CurrentSeasonList(
+                    season_id=current_season.id,
+                    player_id=second.id,
+                    source_record_id=current_sources[1].id,
+                    external_player_id="2",
+                    source_name="Secondo",
+                    official_classic_role="A",
+                    official_mantra_roles="Pc",
+                    official_team_id=roma.id,
+                    quotation=10,
+                    initial_quotation=10,
+                    mantra_quotation=10,
+                    initial_mantra_quotation=10,
+                    fvm=100,
+                    fvm_mantra=100,
+                    mapping_status="certain_external_id",
+                ),
+            ]
+        )
         session.commit()
 
     app = create_app()
@@ -167,7 +236,9 @@ def test_seasons_are_chronological(api: tuple[TestClient, sessionmaker[Session]]
     assert [item["code"] for item in response.json()] == [
         "2024/2025",
         "2025/2026",
+        "2026/2027",
     ]
+    assert response.json()[-1]["is_current"] is True
 
 
 def test_player_list_filters_paginates_and_exposes_reliability(

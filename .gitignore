@@ -29,6 +29,7 @@ data/processed/**
 !.env.example
 
 Statistiche_Fantacalcio_Stagione_*.xlsx
+Quotazioni_Fantacalcio_Stagione_*.xlsx
 data/raw/*.xlsx
 
 prompt.txt

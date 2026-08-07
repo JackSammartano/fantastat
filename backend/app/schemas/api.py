@@ -57,6 +57,34 @@ class PlayerPage(BaseModel):
     total_pages: int
 
 
+class CurrentListItem(BaseModel):
+    id: int
+    player_id: int
+    external_player_id: str | None
+    name: str
+    classic_role: Literal["P", "D", "C", "A"]
+    mantra_roles: list[str]
+    team: str
+    quotation: float | None
+    initial_quotation: float | None
+    quotation_change: float | None
+    mantra_quotation: float | None
+    initial_mantra_quotation: float | None
+    mantra_quotation_change: float | None
+    fvm: float | None
+    fvm_mantra: float | None
+    mapping_status: str
+    historical_seasons: int
+
+
+class CurrentListPage(BaseModel):
+    items: list[CurrentListItem]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
 class PlayerDetailResponse(BaseModel):
     id: int
     display_name: str
@@ -68,6 +96,20 @@ class PlayerDetailResponse(BaseModel):
     aliases: list[str]
     history: list[PlayerHistoryItem]
     metrics: dict[str, Any]
+    current_list: "PlayerCurrentListResponse | None"
+
+
+class PlayerCurrentListResponse(BaseModel):
+    role: Literal["P", "D", "C", "A"]
+    mantra_roles: list[str]
+    team: str
+    quotation: float | None
+    initial_quotation: float | None
+    mantra_quotation: float | None
+    initial_mantra_quotation: float | None
+    fvm: float | None
+    fvm_mantra: float | None
+    mapping_status: str
 
 
 class CompareResponse(BaseModel):
@@ -164,6 +206,9 @@ class RankingItemResponse(BaseModel):
     score: float
     reliability_score: float | None
     total_pv: int | None
+    seasons_with_pv: int | None
+    fantasy_average_trend_slope: float | None
+    fantasy_average_absolute_change: float | None
     metrics: dict[str, RankingMetricComponent]
 
 

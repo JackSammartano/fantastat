@@ -18,6 +18,7 @@ from backend.analytics.ranking import (
     calculate_ranking,
 )
 from backend.app.models import (
+    CurrentSeasonList,
     Player,
     PlayerAlias,
     PlayerSeasonStats,
@@ -82,7 +83,9 @@ def player_metrics(
     continuity_threshold: int = 19,
 ) -> dict[str, Any]:
     seasons = list(
-        session.scalars(select(Season).order_by(Season.start_year))
+        session.scalars(
+            select(Season).where(Season.is_current.is_(False)).order_by(Season.start_year)
+        )
     )
     season_codes = (
         list(selected_seasons) if selected_seasons else [season.code for season in seasons]
@@ -157,18 +160,31 @@ def calculate_players_ranking(
         )
     if len(set(selected_seasons)) != len(selected_seasons):
         raise ValueError("Le stagioni selezionate non possono essere duplicate")
-    known_seasons = set(session.scalars(select(Season.code)))
+    known_seasons = set(
+        session.scalars(select(Season.code).where(Season.is_current.is_(False)))
+    )
     unknown_seasons = set(selected_seasons) - known_seasons
     if unknown_seasons:
         raise ValueError(f"Stagioni non disponibili: {sorted(unknown_seasons)}")
 
     grouped: dict[int, list[tuple[PlayerSeasonStats, Season]]] = defaultdict(list)
     players: dict[int, Player] = {}
+    current_player_ids = set(
+        session.scalars(
+            select(CurrentSeasonList.player_id).where(
+                CurrentSeasonList.official_classic_role == role,
+                CurrentSeasonList.player_id.is_not(None),
+            )
+        )
+    )
     rows = session.execute(
         select(Player, PlayerSeasonStats, Season)
         .join(PlayerSeasonStats, PlayerSeasonStats.player_id == Player.id)
         .join(Season, Season.id == PlayerSeasonStats.season_id)
-        .where(Season.code.in_(selected_seasons))
+        .where(
+            Season.code.in_(selected_seasons),
+            Player.id.in_(current_player_ids),
+        )
         .order_by(Player.id, Season.start_year)
     ).all()
     for player, stats, season in rows:
@@ -184,8 +200,6 @@ def calculate_players_ranking(
             decay=recency_decay,
             continuity_threshold=continuity_threshold,
         )
-        if metrics["latest_role"] != role:
-            continue
         if metrics["total_pv"] < minimum_appearances:
             continue
         candidates.append(
@@ -218,6 +232,27 @@ def player_detail(session: Session, player_id: int) -> dict[str, Any] | None:
             .order_by(PlayerAlias.source_name)
         )
     )
+    current = session.execute(
+        select(CurrentSeasonList, Team)
+        .join(Team, Team.id == CurrentSeasonList.official_team_id)
+        .join(Season, Season.id == CurrentSeasonList.season_id)
+        .where(CurrentSeasonList.player_id == player_id, Season.is_current.is_(True))
+    ).first()
+    current_list = None
+    if current is not None:
+        item, team = current
+        current_list = {
+            "role": item.official_classic_role,
+            "mantra_roles": item.official_mantra_roles.split(";") if item.official_mantra_roles else [],
+            "team": team.display_name,
+            "quotation": item.quotation,
+            "initial_quotation": item.initial_quotation,
+            "mantra_quotation": item.mantra_quotation,
+            "initial_mantra_quotation": item.initial_mantra_quotation,
+            "fvm": item.fvm,
+            "fvm_mantra": item.fvm_mantra,
+            "mapping_status": item.mapping_status,
+        }
     return {
         "id": player.id,
         "display_name": player.display_name,
@@ -229,6 +264,7 @@ def player_detail(session: Session, player_id: int) -> dict[str, Any] | None:
         "aliases": aliases,
         "history": player_history(session, player_id),
         "metrics": player_metrics(session, player_id),
+        "current_list": current_list,
     }
 
 

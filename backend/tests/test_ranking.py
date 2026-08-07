@@ -51,6 +51,21 @@ def test_missing_weighted_metric_excludes_candidate() -> None:
     assert result["items"][0]["score"] == 100
 
 
+def test_positive_trend_receives_the_higher_percentile() -> None:
+    rising = candidate(1, 7, 1)
+    falling = candidate(2, 7, 1)
+    rising.metrics["fantasy_average_trend_slope"] = 0.25
+    falling.metrics["fantasy_average_trend_slope"] = -0.10
+
+    result = calculate_ranking(
+        [rising, falling], {"fantasy_average_trend_slope": 1}
+    )
+
+    assert result["items"][0]["player_id"] == 1
+    assert result["items"][0]["score"] == 100
+    assert result["items"][0]["fantasy_average_trend_slope"] == 0.25
+
+
 @pytest.mark.parametrize(
     "weights, message",
     [

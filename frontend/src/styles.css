@@ -361,8 +361,8 @@ tbody tr:hover { background: #e7f5ee; }
   body { padding-bottom: 0; }
   .app-shell { display: block; }
   .sidebar {
-    position: fixed; z-index: 100; inset: auto auto max(.65rem, env(safe-area-inset-bottom)) max(.65rem, env(safe-area-inset-left));
-    width: 58px; height: 58px; padding: .45rem; border: 1px solid #3c6553;
+    position: fixed; z-index: 100; inset: max(.65rem, env(safe-area-inset-top)) max(.65rem, env(safe-area-inset-right)) auto auto;
+    width: 66px; height: 66px; padding: .5rem; border: 1px solid #3c6553;
     border-radius: 16px; gap: .45rem; overflow: hidden;
     box-shadow: 0 8px 24px #102d2250; transition: width 180ms ease, height 180ms ease;
   }
@@ -372,7 +372,7 @@ tbody tr:hover { background: #e7f5ee; }
   .sidebar__footer { display: none; }
   .nav-link { display: block; min-height: 0; padding: .7rem .8rem; text-align: left; font-size: .85rem; line-height: 1.2; }
   .brand { flex: 0 0 auto; width: 100%; cursor: pointer; }
-  .brand__mark { flex: 0 0 42px; }
+  .brand__mark { flex: 0 0 48px; width: 48px; height: 48px; font-size: 1.05rem; }
   .brand__text { display: none; }
   .sidebar--open .brand__text { display: flex; }
   .stat-grid, .metric-grid { grid-template-columns: repeat(2, 1fr); }

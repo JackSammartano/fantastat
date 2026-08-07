@@ -16,8 +16,11 @@ import { api } from "../api/client";
 import type { CurrentListFilters } from "../api/client";
 import { ReliabilityBadge } from "../components/ReliabilityBadge";
 import { StatePanel } from "../components/StatePanel";
+import { CoachPlayerActions } from "../components/CoachPlayerActions";
 import type { PlayerDetail } from "../models/api";
 import { formatNumber, formatPercent, trendDirection } from "../utils/format";
+import { matchdayStore } from "../coach/matchdayStore";
+import type { MatchdayImport } from "../coach/types";
 
 function trendLabel(value: number | null): string {
   if (value === null) return "Storico insufficiente";
@@ -33,9 +36,11 @@ export function PlayerDetailPage() {
     from?: string;
     rankingState?: unknown;
     listState?: { filters: CurrentListFilters; search: string; team: string };
+    coachTab?: "targets" | "squad" | "matchdays";
   } | null;
   const [player, setPlayer] = useState<PlayerDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [matchdayImports, setMatchdayImports] = useState<MatchdayImport[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -56,6 +61,10 @@ export function PlayerDetailPage() {
       active = false;
     };
   }, [playerId]);
+
+  useEffect(() => {
+    void matchdayStore.list().then(setMatchdayImports).catch(() => setMatchdayImports([]));
+  }, []);
 
   const chartData = useMemo(
     () =>
@@ -81,6 +90,10 @@ export function PlayerDetailPage() {
 
   const metrics = player.metrics;
   const trend = metrics.fantasy_average_percentage_change;
+  const importedVotes = matchdayImports
+    .map((item) => ({ importRow: item, vote: item.votes.find((vote) => vote.externalPlayerId === player.external_player_id) }))
+    .filter((item) => item.vote)
+    .sort((a, b) => b.importRow.season.localeCompare(a.importRow.season) || b.importRow.matchday - a.importRow.matchday);
   return (
     <div className="page">
       <Link
@@ -88,15 +101,19 @@ export function PlayerDetailPage() {
         to={
           navigationState?.from === "rankings"
             ? "/rankings"
+            : navigationState?.from === "coach"
+              ? "/coach"
             : "/current-list"
         }
         state={
           navigationState?.from === "rankings"
             ? { restoreRanking: navigationState.rankingState }
+            : navigationState?.from === "coach"
+              ? { restoreCoachTab: navigationState.coachTab ?? "squad" }
             : { restoreList: navigationState?.listState }
         }
       >
-        ← Torna {navigationState?.from === "rankings" ? "alle classifiche" : "al listone"}
+        ← Torna {navigationState?.from === "rankings" ? "alle classifiche" : navigationState?.from === "coach" ? "a Fanta-Allenatore" : "al listone"}
       </Link>
       <header className="player-hero">
         <div>
@@ -116,6 +133,7 @@ export function PlayerDetailPage() {
           band={metrics.reliability_band}
           score={metrics.reliability_score}
         />
+        {player.current_list && <CoachPlayerActions player={{ id: player.id, externalPlayerId: player.external_player_id, name: player.display_name, role: player.current_list.role, team: player.current_list.team, quotation: player.current_list.quotation, fvm: player.current_list.fvm }} />}
       </header>
 
       {player.current_list && (
@@ -274,6 +292,11 @@ export function PlayerDetailPage() {
           </ResponsiveContainer>
         </section>
       </div>
+
+      {importedVotes.length > 0 && <section className="table-panel matchday-player-history">
+        <div className="table-summary"><strong>Voti importati</strong><span>{importedVotes.length} giornate nel tuo archivio locale</span></div>
+        <div className="table-scroll"><table><thead><tr><th>Stagione</th><th>Giornata</th><th>Fonte</th><th>Voto</th><th>Gol</th><th>Assist</th><th>Amm.</th><th>Esp.</th></tr></thead><tbody>{importedVotes.map(({ importRow, vote }) => vote && <tr key={importRow.key}><td>{importRow.season}</td><td>{importRow.matchday}</td><td>{importRow.source}</td><td><strong>{formatNumber(vote.vote)}</strong></td><td>{vote.goalsScored}</td><td>{vote.assists}</td><td>{vote.yellowCards}</td><td>{vote.redCards}</td></tr>)}</tbody></table></div>
+      </section>}
 
       <section className="table-panel">
         <div className="table-summary">

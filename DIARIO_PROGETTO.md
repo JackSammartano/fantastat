@@ -26,16 +26,16 @@
 ## Stato corrente
 
 **Ultimo aggiornamento:** 7 agosto 2026
-**Fase corrente:** applicazione completa per consultazione locale; listone,
-dettaglio e ranking allineati alla stagione 2026/2027
+**Fase corrente:** prima versione di Fanta-Allenatore completata e verificata
+localmente; modifiche non ancora committate né pubblicate
 
-**Interfaccia asta:** il listone è la vista principale; la vecchia pagina
-giocatori reindirizza al listone. Le schede mantengono il contesto di ritorno e
-la pagina classifiche include un preset didattico modificabile per ogni ruolo.
+**Interfaccia asta:** il listone è la vista principale; preferiti e giocatori
+acquistati possono essere gestiti dal listone e dalle schede. La nuova sezione
+Fanta-Allenatore raccoglie obiettivi d'asta, rosa, budget e giornate importate.
 
-**Mobile e condivisione:** layout responsive completo con navigazione inferiore
-su smartphone. Predisposta istanza separata sulla porta 8080, autenticata e in
-sola lettura; il calcolo ranking resta permesso perché non modifica il database.
+**Mobile e condivisione:** layout responsive completo con menu FL richiudibile
+in alto a destra. I dati Fanta-Allenatore sono locali e indipendenti per ogni
+browser/dispositivo; non vengono inclusi nello snapshot pubblico.
 
 **GitHub Pages:** predisposto snapshot pubblico statico dei soli 493 calciatori
 attuali. Filtri, schede, confronti e ranking funzionano nel browser; dati raw,
@@ -48,6 +48,169 @@ database e operazioni amministrative restano esclusi. Deploy tramite Actions.
 <https://github.com/JackSammartano/fantastat>, branch `main`  
 **File originali modificati:** nessuno
 **Servizi locali:** frontend `127.0.0.1:5173`, API `127.0.0.1:8000`
+
+### Sessione 2026-08-07 — Fanta-Allenatore e importazione giornate
+
+**Stato:** implementazione locale completata e verificata; pubblicazione non
+ancora eseguita.
+
+**Decisioni applicate**
+
+- Preferiti, rosa, budget, priorità, offerte massime e note sono conservati nel
+  `localStorage` del singolo browser.
+- I voti, più voluminosi, sono conservati in IndexedDB nel database locale
+  `fantalab-coach`.
+- Il backup JSON comprende sia i dati personali sia le giornate importate.
+- Gli Excel vengono letti nel browser e non caricati su API, GitHub o server.
+- La sorgente predefinita è il foglio `Fantacalcio`; il parser conserva la fonte
+  nell'identificativo univoco `stagione|giornata|fonte`.
+- Una seconda importazione con la stessa chiave sostituisce la precedente.
+- I file `Voti_Fantacalcio_Stagione_*_Giornata_*.xlsx` sono esclusi da Git.
+- I voti ufficiali restano per uso personale: il workbook dichiara
+  esplicitamente il divieto di riproduzione e pubblicazione su altri siti.
+
+**Funzioni implementate**
+
+- Nuova voce e pagina `Fanta-Allenatore` con tab Obiettivi, La mia rosa e
+  Giornate.
+- Aggiunta/rimozione preferito e rosa dal listone e dalla scheda giocatore.
+- Priorità `alta`, `alternativa`, `scommessa`, offerta massima e note.
+- Passaggio da obiettivo ad acquistato senza duplicare il calciatore.
+- Budget iniziale, crediti spesi/residui e occupazione posti P/D/C/A.
+- Import Excel privato con riconoscimento automatico di stagione, giornata e
+  fonte, anteprima e sostituzione controllata.
+- Elenco ed eliminazione delle giornate importate.
+- Ultimi voti della propria rosa nella pagina Fanta-Allenatore.
+- La tab `La mia rosa` usa quattro tabelle distinte per Portieri, Difensori,
+  Centrocampisti e Attaccanti, con una riga per giocatore e prezzo modificabile
+  direttamente in tabella.
+- La vista predefinita `Complessivo` aggrega tutte le giornate importate della
+  stagione e fonte più recenti: presenze, media voto, gol, assist, gol subiti,
+  rigori parati, ammonizioni ed espulsioni.
+- Il selettore `Vista statistiche` permette di sostituire l'aggregato con i
+  dati di una singola giornata mantenendo la medesima struttura per ruolo.
+- Aggiunte le colonne `Forma 5` e `Trend recente`. Forma 5 è la media degli
+  ultimi cinque voti validi disponibili; le giornate senza voto non diventano
+  zero. Il trend è la pendenza della regressione lineare sugli stessi ultimi
+  cinque voti, in ordine cronologico, con minimo tre osservazioni.
+- Soglie del trend giornata: freccia su per pendenza arrotondata almeno
+  `+0,10` punti per voto, freccia giù per valore al massimo `-0,10`, freccia
+  orizzontale nell'intervallo intermedio. Il numero viene sempre mostrato
+  accanto alla freccia; con tre o quattro voti compare `campione ridotto`.
+- Quando si consulta una giornata passata, gli eventi della tabella sono solo
+  quelli di quel turno, mentre Forma 5 e Trend usano esclusivamente i voti
+  importati fino a quella giornata, senza informazioni future.
+- Prima degli import la rosa resta interamente visibile con statistiche vuote
+  e un collegamento diretto a `Importa giornata`.
+- Storico dei voti importati nella scheda del singolo calciatore.
+- Navigazione contestuale dalle schede: un giocatore aperto dagli Obiettivi
+  torna a `Fanta-Allenatore > Obiettivi`; se aperto dalla rosa torna a
+  `Fanta-Allenatore > La mia rosa`, senza reindirizzamento al listone.
+- Esportazione e ripristino del backup completo.
+- Centratura corretta dei pulsanti compatti preferito/rosa nel listone tramite
+  area interattiva quadrata 40x40 pixel.
+- Le card della tab `Obiettivi` hanno dimensioni uniformi e una griglia che non
+  espande le poche card presenti: quattro colonne su desktop, tre su tablet,
+  due sui dispositivi compatti e una sotto i 520 pixel. La progressione
+  preserva leggibilità e assenza di scorrimento orizzontale su mobile.
+- Tabelle `La mia rosa` rese più compatte: badge del ruolo presente soltanto
+  nel titolo del reparto e con lettera bianca, colonna `Rigori parati` rimossa,
+  spaziature e larghezze riequilibrate per limitare lo scorrimento orizzontale.
+- La colonna `Gol subiti` è riservata alla tabella Portieri; per i portieri le
+  statistiche finali seguono l'ordine Gol subiti, Amm., Esp., Gol, Assist,
+  mentre negli altri reparti restano Gol, Assist, Amm. ed Esp.
+- Il listone non mostra più Quotazione Mantra, FVM Classic e FVM Mantra: al
+  loro posto espone quotazione Classic iniziale e variazione, più utili per
+  leggere l'evoluzione del valore. Dashboard e ordinamenti rapidi usano ora la
+  quotazione Classic; il menu Fanta-Allenatore apre direttamente `La mia rosa`.
+- Aggiunto il pulsante `Aggiorna listone` direttamente nella pagina Listone
+  26/27; la funzione è stata rimossa da Fanta-Allenatore. Importa nel browser
+  il foglio ufficiale `Tutti`, valida stagione/intestazioni/variazioni, mostra anteprima
+  di nuovi, usciti e modificati e aggiorna listone, dashboard, schede e ranking.
+  Il collegamento allo storico usa esclusivamente l'ID Fantacalcio; rosa e
+  obiettivi vengono riconciliati e il listone locale entra nel backup completo.
+- `Aggiorna listone` apre direttamente il selettore Excel, senza un pannello
+  intermedio; il pannello compare solo durante la lettura e per anteprima,
+  errori, conferma o ripristino.
+- Il controllo `Rendimento della rosa` è stato compattato in una singola riga
+  su desktop, con titolo, vista attiva e selettore; su mobile torna a capo per
+  mantenere il controllo facilmente utilizzabile.
+- Suite importazioni ampliata con fixture sintetiche prive di dati protetti:
+  parser listone valido e casi di foglio assente, variazione incoerente, ID
+  duplicato e ruolo invalido; riconciliazione di noti, nuovi e usciti; parser
+  giornate con fonte, squadra, senza voto e righe allenatore; persistenza,
+  ordinamento, sostituzione ed eliminazione in IndexedDB; persistenza, filtri e
+  ripristino del listone locale. Esito: 31 test frontend e 89 backend superati,
+  lint pulito e build statica completata.
+
+**Collaudo sul file reale**
+
+File: `Voti_Fantacalcio_Stagione_2025_26_Giornata_38.xlsx`.
+
+- Tre fogli riconosciuti: `Fantacalcio`, `Statistico`, `Italia`.
+- Titolo rilevato: `Voti Fantacalcio 38ª giornata di campionato`.
+- Stagione rilevata: `2025/2026`.
+- Giornata rilevata: `38`.
+- 340 righe numeriche nel foglio: 320 calciatori e 20 allenatori con ruolo
+  speciale `ALL`.
+- Le 20 righe allenatore vengono escluse esplicitamente e conteggiate
+  nell'anteprima; non sono perse silenziosamente.
+
+**File principali creati**
+
+```text
+frontend/src/coach/types.ts
+frontend/src/coach/CoachContext.tsx
+frontend/src/coach/matchdayStore.ts
+frontend/src/coach/matchdayParser.ts
+frontend/src/coach/matchdayParser.test.ts
+frontend/src/components/CoachPlayerActions.tsx
+frontend/src/pages/FantaCoachPage.tsx
+```
+
+**File principali modificati**
+
+```text
+.gitignore
+frontend/package.json
+frontend/package-lock.json
+frontend/src/App.tsx
+frontend/src/main.tsx
+frontend/src/components/AppShell.tsx
+frontend/src/pages/CurrentListPage.tsx
+frontend/src/pages/PlayerDetailPage.tsx
+frontend/src/styles.css
+DIARIO_PROGETTO.md
+```
+
+**Verifiche**
+
+```text
+Vitest: 13 test superati su 13 in 5 file
+ESLint: superato senza errori o warning
+TypeScript + build statica Vite: superati
+Parser JavaScript sul workbook reale: foglio Fantacalcio e 320 giocatori
+git check-ignore: file Voti della giornata correttamente ignorato
+```
+
+Verifica ripetuta dopo l'introduzione della rosa tabellare e del trend sulle
+giornate: 16 test superati in 6 file, ESLint e build statica superati.
+
+**Dipendenze**
+
+- Aggiunto `read-excel-file` 9.3.5 per la lettura privata degli `.xlsx` nel
+  browser.
+- `npm install` segnala quattro vulnerabilità high; non è stato eseguito alcun
+  `npm audit fix` automatico. FE-002 resta aperto per audit controllato.
+
+**Prossima azione esatta**
+
+1. eseguire un collaudo manuale nel browser con preferito, acquisto, budget e
+   importazione della giornata 38;
+2. verificare visivamente mobile e desktop;
+3. se approvato dall'utente, creare commit e pubblicare su GitHub Pages;
+4. in una fase successiva aggiungere regole bonus/malus configurabili e
+   fantavoto calcolato.
 
 ### Migrazione al PC di casa
 

@@ -29,6 +29,9 @@ const RankingsPage = lazy(() =>
     default: module.RankingsPage
   }))
 );
+const FantaCoachPage = lazy(() =>
+  import("./pages/FantaCoachPage").then((module) => ({ default: module.FantaCoachPage }))
+);
 const MappingReviewPage = lazy(() =>
   import("./pages/MappingReviewPage").then((module) => ({
     default: module.MappingReviewPage
@@ -48,6 +51,7 @@ export function App() {
           <Route path="players/:playerId" element={<PlayerDetailPage />} />
           <Route path="compare" element={<ComparePage />} />
           <Route path="rankings" element={<RankingsPage />} />
+          <Route path="coach" element={<FantaCoachPage />} />
           <Route path="mappings" element={IS_STATIC ? <Navigate to="/" replace /> : <MappingReviewPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -30,6 +30,7 @@ data/processed/**
 
 Statistiche_Fantacalcio_Stagione_*.xlsx
 Quotazioni_Fantacalcio_Stagione_*.xlsx
+Voti_Fantacalcio_Stagione_*_Giornata_*.xlsx
 data/raw/*.xlsx
 
 prompt.txt

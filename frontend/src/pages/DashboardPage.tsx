@@ -32,10 +32,10 @@ export function DashboardPage() {
     let active = true;
     Promise.all([
       api.seasons(),
-      api.currentList({ pageSize: 5, sortBy: "fvm", sortOrder: "desc" }),
+      api.currentList({ pageSize: 5, sortBy: "quotation", sortOrder: "desc" }),
       api.currentList({ pageSize: 1, mappingStatus: "new_player" }),
       ...ROLES.map((role) =>
-        api.currentList({ role, pageSize: 1, sortBy: "fvm", sortOrder: "desc" })
+        api.currentList({ role, pageSize: 1, sortBy: "quotation", sortOrder: "desc" })
       )
     ])
       .then(([seasons, currentList, newPlayers, ...rolePages]) => {
@@ -115,12 +115,12 @@ export function DashboardPage() {
           {ROLES.map((role) => {
             const roleData = data.byRole[role];
             const topPlayer = roleData.items[0];
-            const filters: CurrentListFilters = { role, page: 1, pageSize: 25, sortBy: "fvm", sortOrder: "desc" };
+            const filters: CurrentListFilters = { role, page: 1, pageSize: 25, sortBy: "quotation", sortOrder: "desc" };
             return (
               <Link className="role-summary-card" key={role} to="/current-list" state={listState(filters)}>
                 <div><span className={`role-chip role-chip--${role}`}>{role}</span><strong>{ROLE_NAMES[role]}</strong></div>
                 <strong className="role-summary-card__count">{roleData.total_items}</strong>
-                <small>{topPlayer ? `FVM più alto: ${topPlayer.name} · ${formatNumber(topPlayer.fvm, 0)}` : "Nessun giocatore"}</small>
+                <small>{topPlayer ? `Quotazione più alta: ${topPlayer.name} · ${formatNumber(topPlayer.quotation, 0)}` : "Nessun giocatore"}</small>
               </Link>
             );
           })}
@@ -130,15 +130,15 @@ export function DashboardPage() {
       <div className="dashboard-grid">
         <section className="panel">
           <div className="panel__header">
-            <div><span className="eyebrow">Indicazioni d’asta</span><h2>Top FVM Classic</h2></div>
-            <Link to="/current-list" state={listState({ page: 1, pageSize: 25, sortBy: "fvm", sortOrder: "desc" })}>Apri classifica</Link>
+            <div><span className="eyebrow">Indicazioni d’asta</span><h2>Top quotazioni Classic</h2></div>
+            <Link to="/current-list" state={listState({ page: 1, pageSize: 25, sortBy: "quotation", sortOrder: "desc" })}>Apri listone</Link>
           </div>
           <div className="leader-list">
             {data.currentList.items.map((player, index) => (
-              <Link className="leader-row" to={`/players/${player.player_id}`} state={{ from: "current-list", listState: listState({ page: 1, pageSize: 25, sortBy: "fvm", sortOrder: "desc" }).restoreList }} key={player.id}>
+              <Link className="leader-row" to={`/players/${player.player_id}`} state={{ from: "current-list", listState: listState({ page: 1, pageSize: 25, sortBy: "quotation", sortOrder: "desc" }).restoreList }} key={player.id}>
                 <span className="leader-row__rank">{String(index + 1).padStart(2, "0")}</span>
                 <div className="leader-row__identity"><strong>{player.name}</strong><span>{player.classic_role} · {player.team}</span></div>
-                <div className="leader-row__meta"><strong>{formatNumber(player.fvm, 0)}</strong><span>su 1000</span></div>
+                <div className="leader-row__meta"><strong>{formatNumber(player.quotation, 0)}</strong><span>crediti</span></div>
               </Link>
             ))}
           </div>

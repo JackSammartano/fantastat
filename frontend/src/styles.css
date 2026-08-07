@@ -141,6 +141,9 @@ tbody tr:hover { background: #f6f6f0; }
 .reliability--low { color: #914436; background: #f3ddd8; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 1rem; padding: 1rem; }
 .current-list-filters { grid-template-columns: 2fr 1fr repeat(3, minmax(120px, 1fr)) auto auto; }
+.current-list-import { display: grid; justify-items: end; }
+.current-list-import__content { position: fixed; z-index: 8; top: 1rem; right: clamp(.75rem, 4vw, 4rem); display: grid; width: min(900px, calc(100vw - 1.5rem)); max-height: calc(100vh - 2rem); gap: 1rem; overflow-y: auto; }
+.current-list-import__close { justify-self: end; color: #fff; background: #063027ee; }
 .status-pill { display: inline-flex; padding: .22rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
 .status-pill--new { background: #fff1cf; color: #77540b; }
 .current-player-panel { margin-bottom: 1.25rem; }
@@ -266,6 +269,58 @@ tbody tr:hover { background: #f6f6f0; }
 .merge-success { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #8eb8a0; border-radius: 10px; color: #205c3e; background: #e4f1e8; }
 .merge-success div { display: flex; flex-direction: column; gap: .25rem; }
 .merge-success span { font-size: .8rem; }
+.coach-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+.coach-action { display: inline-flex; align-items: center; gap: .35rem; padding: .55rem .7rem; border: 1px solid #9dbeb3; border-radius: 10px; color: #235343; background: #f6fbf8; cursor: pointer; font-weight: 700; }
+.coach-action--active { color: #684b00; border-color: #ddbd55; background: #fff4c9; }
+.coach-action--squad { color: #07533d; border-color: #58b693; background: #dff4e9; }
+.coach-actions--compact { flex-wrap: nowrap; }
+.coach-actions--compact .coach-action { width: 40px; height: 40px; min-width: 40px; padding: 0; justify-content: center; line-height: 1; font-size: 1.15rem; }
+.coach-actions--compact .coach-action span { display: none; }
+.coach-tabs { display: flex; gap: .4rem; padding: .4rem; margin-bottom: 1rem; border: 1px solid #81b5a844; border-radius: 14px; background: #eef7f2e8; backdrop-filter: blur(10px); }
+.coach-backup-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.coach-tabs button { flex: 1; padding: .8rem; border: 0; border-radius: 10px; color: #496b60; background: transparent; cursor: pointer; font-weight: 700; }
+.coach-tabs button.active { color: white; background: linear-gradient(135deg, #08765a, #087d78); }
+.coach-tabs span { display: inline-grid; min-width: 22px; height: 22px; margin-left: .3rem; place-items: center; border-radius: 999px; background: #ffffff30; font-size: .72rem; }
+.coach-section { display: grid; gap: 1rem; }
+.coach-section__heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; color: #f5fffb; }
+.coach-player-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; gap: 1rem; }
+.coach-player-card { display: grid; gap: 1rem; padding: 1rem; border: 1px solid #8bbeb144; border-radius: 16px; background: #f7fbf8f2; box-shadow: 0 12px 35px #00171f2e; }
+.coach-player-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.coach-player-card__head > div { display: flex; align-items: center; gap: .6rem; }
+.coach-player-card__head a { display: flex; flex-direction: column; gap: .2rem; }
+.coach-player-card__head small { color: #718078; }
+.coach-player-card__head > button { border: 0; color: #914436; background: transparent; cursor: pointer; font-size: 1.3rem; }
+.coach-card-fields { display: grid; grid-template-columns: 1.4fr 1fr; gap: .7rem; }
+.coach-empty { padding: 2rem; text-align: center; }
+.coach-budget { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.coach-budget > .field, .coach-budget > .stat-card { padding: 1rem; border: 1px solid #8bbeb144; border-radius: 14px; background: #f7fbf8ed; }
+.coach-budget .stat-card { margin: 0; }
+.latest-squad-votes { margin-top: .5rem; }
+.latest-squad-votes > div:not(.panel__header) { display: flex; justify-content: space-between; padding: .6rem 0; border-top: 1px solid #d9e5df; }
+.squad-performance--empty { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.squad-view-controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.squad-view-controls h2 { margin: 0; font-size: 1.15rem; white-space: nowrap; }
+.squad-view-controls h2 span { color: #63736a; font-weight: 500; }
+.squad-view-controls .field { min-width: 280px; }
+.squad-view-controls .field { display: flex; align-items: center; gap: .65rem; }
+.squad-role-table .table-summary > div { display: flex; align-items: center; gap: .6rem; }
+.squad-role-table .table-summary .role-chip { color: #fff; }
+.squad-role-table th, .squad-role-table td { padding: .7rem .6rem; }
+.squad-role-table .form-five, .squad-role-table .matchday-trend { min-width: 82px; }
+.table-number-input { width: 62px; padding: .4rem; border: 1px solid #aac5bb; border-radius: 8px; background: #fbfffc; }
+.table-remove { width: 32px; height: 32px; border: 0; border-radius: 8px; color: #914436; background: #f3ddd8; cursor: pointer; font-size: 1.1rem; }
+.form-five, .matchday-trend { display: flex; min-width: 105px; flex-direction: column; gap: .15rem; }
+.form-five small, .matchday-trend small { color: #74827a; font-size: .72rem; white-space: nowrap; }
+.matchday-trend--up strong { color: #087c4d; }
+.matchday-trend--down strong { color: #b13d35; }
+.matchday-trend--stable strong { color: #63736a; }
+.import-panel { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.import-preview .stat-grid { margin-bottom: 1rem; }
+.matchday-list { display: grid; gap: .5rem; }
+.matchday-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .8rem 0; border-top: 1px solid #d7e5df; }
+.matchday-row > div { display: flex; flex-direction: column; gap: .25rem; }
+.matchday-row span { color: #718078; font-size: .82rem; }
 
 /* Stadium night theme */
 :root {
@@ -357,6 +412,7 @@ tbody tr:hover { background: #e7f5ee; }
 .status-dot { background: #b9ff77; box-shadow: 0 0 10px #b9ff77; }
 
 @media (max-width: 1050px) {
+  .coach-player-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .role-overview { grid-template-columns: repeat(2, 1fr); }
   body { padding-bottom: 0; }
   .app-shell { display: block; }
@@ -385,6 +441,7 @@ tbody tr:hover { background: #e7f5ee; }
   .trend-note { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
+  .coach-player-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body { background-attachment: scroll; }
   .page { padding: 1rem .75rem 1.5rem; }
   h1 { font-size: clamp(1.9rem, 10vw, 2.7rem); }
@@ -417,6 +474,10 @@ tbody tr:hover { background: #e7f5ee; }
   .mapping-card__heading, .merge-success { flex-direction: column; }
   .mapping-actions .button { flex: 1; }
   .comparison-grid { grid-template-columns: 1fr; }
+  .coach-budget { grid-template-columns: repeat(2, 1fr); }
+  .coach-section__heading, .import-panel, .squad-view-controls { align-items: stretch; flex-direction: column; }
+  .squad-view-controls h2 { white-space: normal; }
+  .squad-view-controls .field { display: grid; min-width: 0; }
 }
 @media (max-width: 520px) {
   .dashboard-section__header { align-items: flex-start; flex-direction: column; }
@@ -432,4 +493,8 @@ tbody tr:hover { background: #e7f5ee; }
   .saved-configs .button, .filters .button { width: 100%; }
   .compare-search { grid-template-columns: 1fr; }
   .selected-players .button { width: 100%; margin-left: 0; }
+  .coach-tabs { overflow-x: auto; }
+  .coach-tabs button { min-width: 120px; }
+  .coach-player-grid, .coach-budget, .coach-card-fields { grid-template-columns: 1fr; }
+  .matchday-row { align-items: flex-start; flex-direction: column; }
 }

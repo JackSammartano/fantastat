@@ -3,9 +3,10 @@ import { NavLink, Outlet } from "react-router-dom";
 import { IS_STATIC } from "../api/client";
 
 const navItems = [
-  { to: "/", label: "Dashboard", end: true },
-  { to: "/current-list", label: "Listone 26/27" },
-  { to: "/compare", label: "Confronto" },
+  { to: "/", label: "Dashboard", end: true, state: undefined },
+  { to: "/current-list", label: "Listone 26/27", state: undefined },
+  { to: "/coach", label: "Fanta-Allenatore", state: { restoreCoachTab: "squad" } },
+  { to: "/compare", label: "Confronto", state: undefined },
   { to: "/rankings", label: "Classifiche" },
   ...(!IS_STATIC ? [{ to: "/mappings", label: "Revisioni" }] : [])
 ];
@@ -35,6 +36,7 @@ export function AppShell() {
             <NavLink
               key={item.to}
               to={item.to}
+              state={item.state}
               end={item.end}
               className={({ isActive }) =>
                 `nav-link${isActive ? " nav-link--active" : ""}`

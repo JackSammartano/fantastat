@@ -16,6 +16,7 @@ import type {
   Season
 } from "../models/api";
 import { staticApi } from "./staticData";
+import { currentListStore, filterCurrentList } from "../currentList/currentListStore";
 
 export const IS_STATIC = import.meta.env.VITE_STATIC_MODE === "true";
 
@@ -76,6 +77,8 @@ export interface CurrentListFilters {
 }
 
 export function getCurrentList(filters: CurrentListFilters = {}) {
+  const imported = currentListStore.get();
+  if (imported) return Promise.resolve(filterCurrentList(imported.items, filters));
   if (IS_STATIC) return staticApi.currentList(filters);
   const params = new URLSearchParams();
   if (filters.search) params.set("search", filters.search);
@@ -114,7 +117,12 @@ export const api = {
   seasons: () => IS_STATIC ? staticApi.seasons() : request<Season[]>("/api/v1/seasons"),
   players: getPlayers,
   currentList: getCurrentList,
-  player: (id: number) => IS_STATIC ? staticApi.player(id) as Promise<PlayerDetail> : request<PlayerDetail>(`/api/v1/players/${id}`),
+  player: async (id: number) => {
+    const detail = IS_STATIC ? await staticApi.player(id) as PlayerDetail : await request<PlayerDetail>(`/api/v1/players/${id}`);
+    const imported = currentListStore.get()?.items.find((item) => item.player_id === id);
+    if (!detail || !imported) return detail;
+    return { ...detail, current_list: { role: imported.classic_role, mantra_roles: imported.mantra_roles, team: imported.team, quotation: imported.quotation, initial_quotation: imported.initial_quotation, mantra_quotation: imported.mantra_quotation, initial_mantra_quotation: imported.initial_mantra_quotation, fvm: imported.fvm, fvm_mantra: imported.fvm_mantra, mapping_status: imported.mapping_status } };
+  },
   comparePlayers: (ids: number[]) => {
     if (IS_STATIC) return staticApi.comparePlayers(ids);
     const params = new URLSearchParams();
@@ -124,7 +132,7 @@ export const api = {
   rankingMetadata: () => IS_STATIC ? staticApi.rankingMetadata() :
     request<RankingMetadata>("/api/v1/rankings"),
   calculateRanking: (payload: RankingRequest) =>
-    IS_STATIC ? staticApi.calculateRanking(payload) : request<RankingResponse>("/api/v1/rankings/calculate", {
+    IS_STATIC || currentListStore.get() ? staticApi.calculateRanking(payload) : request<RankingResponse>("/api/v1/rankings/calculate", {
       method: "POST",
       body: JSON.stringify(payload)
     }),

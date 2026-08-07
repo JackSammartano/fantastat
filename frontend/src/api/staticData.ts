@@ -12,6 +12,7 @@ import type {
   Season
 } from "../models/api";
 import type { CurrentListFilters, PlayerFilters } from "./client";
+import { currentListStore, filterCurrentList } from "../currentList/currentListStore";
 
 interface StaticSnapshot {
   schema_version: number;
@@ -46,21 +47,7 @@ function page<T>(items: T[], pageNumber = 1, pageSize = 25) {
 }
 
 export async function staticCurrentList(filters: CurrentListFilters = {}): Promise<CurrentListPage> {
-  let items = [...(await snapshot()).current_list];
-  if (filters.search) items = items.filter((item) => item.name.toLocaleLowerCase("it").includes(filters.search!.toLocaleLowerCase("it")));
-  if (filters.role) items = items.filter((item) => item.classic_role === filters.role);
-  if (filters.team) items = items.filter((item) => item.team.toLocaleLowerCase("it") === filters.team!.toLocaleLowerCase("it"));
-  if (filters.mappingStatus) items = items.filter((item) => item.mapping_status === filters.mappingStatus);
-  if (filters.minQuotation !== undefined) items = items.filter((item) => (item.quotation ?? -1) >= filters.minQuotation!);
-  if (filters.maxQuotation !== undefined) items = items.filter((item) => (item.quotation ?? Infinity) <= filters.maxQuotation!);
-  const key = filters.sortBy ?? "quotation";
-  items.sort((a, b) => {
-    const av = (a as unknown as Record<string, string | number | null>)[key];
-    const bv = (b as unknown as Record<string, string | number | null>)[key];
-    const result = typeof av === "string" ? av.localeCompare(String(bv), "it") : Number(av ?? -Infinity) - Number(bv ?? -Infinity);
-    return filters.sortOrder === "asc" ? result : -result;
-  });
-  return page(items, filters.page, filters.pageSize);
+  return filterCurrentList(currentListStore.get()?.items ?? (await snapshot()).current_list, filters);
 }
 
 export async function staticPlayers(filters: PlayerFilters = {}): Promise<PlayerPage> {
@@ -164,7 +151,7 @@ export async function staticRanking(request: RankingRequest): Promise<RankingRes
   const data = await snapshot();
   const active = Object.entries(request.metric_weights).filter(([, weight]) => weight > 0);
   if (!active.length) throw new Error("È richiesto almeno un peso maggiore di zero");
-  const pool = data.current_list.filter((item) => item.classic_role === request.role).map((item) => data.details[String(item.player_id)]).filter((detail) => detail.history.length > 0);
+  const pool = (currentListStore.get()?.items ?? data.current_list).filter((item) => item.classic_role === request.role).map((item) => data.details[String(item.player_id)]).filter((detail): detail is PlayerDetail => Boolean(detail?.history.length));
   const calculated = pool.map((detail) => ({ detail, values: metrics(detail.history, request) })).filter((row) => row.values.total_pv >= request.minimum_appearances);
   const excluded = calculated.filter((row) => active.some(([key]) => (row.values as Record<string, number | null>)[key] == null));
   const eligible = calculated.filter((row) => !excluded.includes(row));

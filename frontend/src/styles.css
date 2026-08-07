@@ -82,6 +82,20 @@ p { color: #607269; line-height: 1.65; }
 .leader-row__identity, .leader-row__meta { display: flex; flex-direction: column; gap: .2rem; }
 .leader-row__identity span { color: #728077; font-size: .82rem; }
 .leader-row__meta { align-items: flex-end; }
+.leader-row__meta > span { color: #77847d; font-size: .76rem; }
+.dashboard-section { margin: 1.5rem 0; }
+.dashboard-section__header { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: .8rem; color: #f5fffb; }
+.dashboard-section__header > span { color: #c4ddd6; }
+.role-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.role-summary-card { display: grid; gap: .8rem; padding: 1.1rem; border: 1px solid #8bbeb144; border-radius: 16px; background: #f7fbf8ed; box-shadow: 0 12px 35px #00171f2e; backdrop-filter: blur(10px); }
+.role-summary-card:hover { transform: translateY(-2px); border-color: #42a98c; }
+.role-summary-card > div { display: flex; align-items: center; gap: .6rem; }
+.role-summary-card__count { font-size: 2rem; color: #07513f; }
+.role-summary-card small { color: #687a72; line-height: 1.4; }
+.dashboard-actions { display: flex; flex-direction: column; }
+.dashboard-actions > a { display: flex; flex-direction: column; gap: .2rem; padding: .9rem 0; border-top: 1px solid #5b8f8080; }
+.dashboard-actions > a:hover { padding-left: .35rem; }
+.dashboard-actions > a span { color: #bedbd2; font-size: .82rem; }
 .method-metric { display: flex; justify-content: space-between; padding: .8rem 0; border-top: 1px solid #426353; }
 .filters { display: grid; grid-template-columns: 2fr repeat(4, 1fr) auto auto; align-items: end; gap: 1rem; padding: 1rem; margin-bottom: 1rem; }
 .field { display: grid; gap: .4rem; color: #63736a; font-size: .8rem; font-weight: 600; }
@@ -343,6 +357,7 @@ tbody tr:hover { background: #e7f5ee; }
 .status-dot { background: #b9ff77; box-shadow: 0 0 10px #b9ff77; }
 
 @media (max-width: 1050px) {
+  .role-overview { grid-template-columns: repeat(2, 1fr); }
   body { padding-bottom: 0; }
   .app-shell { display: block; }
   .sidebar {
@@ -404,6 +419,8 @@ tbody tr:hover { background: #e7f5ee; }
   .comparison-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
+  .dashboard-section__header { align-items: flex-start; flex-direction: column; }
+  .role-overview { grid-template-columns: 1fr; }
   .stat-grid, .metric-grid, .filters { grid-template-columns: 1fr; }
   .current-player-values { grid-template-columns: 1fr 1fr; }
   .preset-panel { align-items: stretch; flex-direction: column; }

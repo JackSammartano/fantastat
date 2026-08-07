@@ -1,25 +1,28 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api/client";
-import { ReliabilityBadge } from "../components/ReliabilityBadge";
+import { api, type CurrentListFilters } from "../api/client";
 import { StatePanel } from "../components/StatePanel";
-import type {
-  DataQualityIssue,
-  PendingMapping,
-  CurrentListPage,
-  PlayerPage,
-  Season
-} from "../models/api";
+import type { CurrentListPage, Role, Season } from "../models/api";
 import { formatNumber } from "../utils/format";
+
+const ROLES: Role[] = ["P", "D", "C", "A"];
+const ROLE_NAMES: Record<Role, string> = {
+  P: "Portieri",
+  D: "Difensori",
+  C: "Centrocampisti",
+  A: "Attaccanti"
+};
 
 interface DashboardData {
   seasons: Season[];
-  players: PlayerPage;
-  leaders: PlayerPage;
-  issues: DataQualityIssue[];
-  mappings: PendingMapping[];
   currentList: CurrentListPage;
+  newPlayers: CurrentListPage;
+  byRole: Record<Role, CurrentListPage>;
 }
+
+const listState = (filters: CurrentListFilters) => ({
+  restoreList: { filters, search: "", team: "" }
+});
 
 export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -29,149 +32,124 @@ export function DashboardPage() {
     let active = true;
     Promise.all([
       api.seasons(),
-      api.players({ pageSize: 1 }),
-      api.players({
-        pageSize: 5,
-        sortBy: "fantasy_average",
-        sortOrder: "desc",
-        minAppearances: 10
-      }),
-      api.issues(),
-      api.pendingMappings()
-      ,api.currentList({ pageSize: 1 })
+      api.currentList({ pageSize: 5, sortBy: "fvm", sortOrder: "desc" }),
+      api.currentList({ pageSize: 1, mappingStatus: "new_player" }),
+      ...ROLES.map((role) =>
+        api.currentList({ role, pageSize: 1, sortBy: "fvm", sortOrder: "desc" })
+      )
     ])
-      .then(([seasons, players, leaders, issues, mappings, currentList]) => {
-        if (active) setData({ seasons, players, leaders, issues, mappings, currentList });
+      .then(([seasons, currentList, newPlayers, ...rolePages]) => {
+        if (!active) return;
+        setData({
+          seasons,
+          currentList,
+          newPlayers,
+          byRole: Object.fromEntries(
+            ROLES.map((role, index) => [role, rolePages[index]])
+          ) as Record<Role, CurrentListPage>
+        });
       })
       .catch((reason: unknown) => {
         if (active) {
-          setError(
-            reason instanceof Error ? reason.message : "Errore di caricamento"
-          );
+          setError(reason instanceof Error ? reason.message : "Errore di caricamento");
         }
       });
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
   if (error) {
-    return (
-      <StatePanel
-        title="Backend non raggiungibile"
-        message={`${error}. Avvia FastAPI su 127.0.0.1:8000.`}
-        tone="error"
-      />
-    );
+    return <StatePanel title="Dashboard non disponibile" message={error} tone="error" />;
   }
   if (!data) {
-    return (
-      <StatePanel
-        title="Caricamento dashboard"
-        message="Lettura dei dati locali in corso…"
-      />
-    );
+    return <StatePanel title="Caricamento dashboard" message="Preparazione del riepilogo asta…" />;
   }
 
-  const warningCount = data.issues.filter(
-    (issue) => issue.category === "data_quality"
-  ).length;
+  const historicalPlayers = data.currentList.total_items - data.newPlayers.total_items;
+  const historicalSeasons = data.seasons.filter((season) => !season.is_current).length;
+
   return (
     <div className="page">
       <header className="page-header page-header--hero">
         <div>
-          <span className="eyebrow">Storico Serie A</span>
-          <h1>La tua asta, con memoria.</h1>
+          <span className="eyebrow">FantaLab · Asta 2026/2027</span>
+          <h1>Il campo visivo sulla tua asta.</h1>
           <p>
-            Il listone ufficiale 2026/27 collegato a quattro stagioni storiche,
-            con qualità del campione sempre visibile.
+            Listone ufficiale, valori d’asta e storico: tutto ciò che serve per
+            individuare rapidamente i giocatori da seguire.
           </p>
         </div>
         <Link className="button button--primary" to="/current-list">
-          Apri il listone
+          Consulta il listone
         </Link>
       </header>
 
-      <section className="stat-grid" aria-label="Riepilogo">
+      <section className="stat-grid" aria-label="Riepilogo del listone">
         <article className="stat-card">
-          <span>Listone 2026/27</span>
+          <span>Giocatori disponibili</span>
           <strong>{data.currentList.total_items.toLocaleString("it-IT")}</strong>
-          <small>calciatori ufficiali attivi</small>
+          <small>nel listone ufficiale 26/27</small>
         </article>
         <article className="stat-card">
-          <span>Giocatori</span>
-          <strong>{data.players.total_items.toLocaleString("it-IT")}</strong>
-          <small>identità storiche distinte</small>
+          <span>Con storico</span>
+          <strong>{historicalPlayers.toLocaleString("it-IT")}</strong>
+          <small>analizzabili sulle stagioni precedenti</small>
         </article>
         <article className="stat-card">
-          <span>Stagioni</span>
-          <strong>{data.seasons.filter((season) => !season.is_current).length}</strong>
-          <small>stagioni storiche normalizzate</small>
+          <span>Nuovi profili</span>
+          <strong>{data.newPlayers.total_items.toLocaleString("it-IT")}</strong>
+          <small>senza uno storico collegato</small>
         </article>
         <article className="stat-card">
-          <span>Mapping da rivedere</span>
-          <strong>{data.mappings.length}</strong>
-          <small>nessuna fusione automatica</small>
+          <span>Profondità storica</span>
+          <strong>{historicalSeasons}</strong>
+          <small>stagioni precedenti disponibili</small>
         </article>
-        <article className="stat-card">
-          <span>Warning dati</span>
-          <strong>{warningCount}</strong>
-          <small>record conservati e segnalati</small>
-        </article>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="dashboard-section__header">
+          <div><span className="eyebrow">Composizione del listone</span><h2>Disponibilità per ruolo</h2></div>
+          <span>{data.currentList.total_items} giocatori totali</span>
+        </div>
+        <div className="role-overview">
+          {ROLES.map((role) => {
+            const roleData = data.byRole[role];
+            const topPlayer = roleData.items[0];
+            const filters: CurrentListFilters = { role, page: 1, pageSize: 25, sortBy: "fvm", sortOrder: "desc" };
+            return (
+              <Link className="role-summary-card" key={role} to="/current-list" state={listState(filters)}>
+                <div><span className={`role-chip role-chip--${role}`}>{role}</span><strong>{ROLE_NAMES[role]}</strong></div>
+                <strong className="role-summary-card__count">{roleData.total_items}</strong>
+                <small>{topPlayer ? `FVM più alto: ${topPlayer.name} · ${formatNumber(topPlayer.fvm, 0)}` : "Nessun giocatore"}</small>
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       <div className="dashboard-grid">
         <section className="panel">
           <div className="panel__header">
-            <div>
-              <span className="eyebrow">Ultima stagione disponibile</span>
-              <h2>Fantamedia in evidenza</h2>
-            </div>
-            <Link to="/players">Vedi tutti</Link>
+            <div><span className="eyebrow">Indicazioni d’asta</span><h2>Top FVM Classic</h2></div>
+            <Link to="/current-list" state={listState({ page: 1, pageSize: 25, sortBy: "fvm", sortOrder: "desc" })}>Apri classifica</Link>
           </div>
           <div className="leader-list">
-            {data.leaders.items.map((player, index) => (
-              <Link
-                className="leader-row"
-                to={`/players/${player.id}`}
-                key={player.id}
-              >
-                <span className="leader-row__rank">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div className="leader-row__identity">
-                  <strong>{player.display_name}</strong>
-                  <span>
-                    {player.latest_role} · {player.latest_team}
-                  </span>
-                </div>
-                <div className="leader-row__meta">
-                  <strong>{player.latest_rated_appearances} Pv</strong>
-                  <ReliabilityBadge
-                    band={player.reliability_band}
-                    score={player.reliability_score}
-                  />
-                </div>
+            {data.currentList.items.map((player, index) => (
+              <Link className="leader-row" to={`/players/${player.player_id}`} state={{ from: "current-list", listState: listState({ page: 1, pageSize: 25, sortBy: "fvm", sortOrder: "desc" }).restoreList }} key={player.id}>
+                <span className="leader-row__rank">{String(index + 1).padStart(2, "0")}</span>
+                <div className="leader-row__identity"><strong>{player.name}</strong><span>{player.classic_role} · {player.team}</span></div>
+                <div className="leader-row__meta"><strong>{formatNumber(player.fvm, 0)}</strong><span>su 1000</span></div>
               </Link>
             ))}
           </div>
         </section>
 
-        <section className="panel panel--accent">
-          <span className="eyebrow">Metodo</span>
-          <h2>Rendimento e affidabilità restano separati.</h2>
-          <p>
-            Una fantamedia alta su poche partite non viene nascosta né
-            promossa: mostriamo il dato e, accanto, la solidità del campione.
-          </p>
-          <div className="method-metric">
-            <span>Soglia continuità</span>
-            <strong>19 presenze</strong>
-          </div>
-          <div className="method-metric">
-            <span>Peso stagione precedente</span>
-            <strong>{formatNumber(0.75, 2)}</strong>
-          </div>
+        <section className="panel panel--accent dashboard-actions">
+          <span className="eyebrow">Accesso rapido</span>
+          <h2>Prepara le tue scelte.</h2>
+          <Link to="/current-list"><strong>Listone 26/27</strong><span>Filtra e consulta tutti i giocatori →</span></Link>
+          <Link to="/rankings"><strong>Classifiche</strong><span>Crea graduatorie per ruolo →</span></Link>
+          <Link to="/compare"><strong>Confronto</strong><span>Metti i candidati faccia a faccia →</span></Link>
         </section>
       </div>
     </div>
